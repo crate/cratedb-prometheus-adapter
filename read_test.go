@@ -11,6 +11,7 @@ func TestQueryToSQL(t *testing.T) {
 	cases := []struct {
 		query *remote.Query
 		sql   string
+		err   error
 	}{
 		{
 			query: &remote.Query{
@@ -31,7 +32,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE ("ln" = 'v') AND ("ln" != 'v') AND ("ln" ~ 'v') AND ("ln" !~ 'v') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE ("ln" = 'v') AND ("ln" != 'v') AND ("ln" ~ '^(?:v)$') AND ("ln" !~ '^(?:v)$' OR "ln" IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -45,7 +46,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE ("ln\"" = 'v\'') AND ("ln\"" != 'v\'') AND ("ln\"" ~ 'v\'') AND ("ln\"" !~ 'v\'') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE ("ln\"" = 'v\'') AND ("ln\"" != 'v\'') AND ("ln\"" ~ '^(?:v\')$') AND ("ln\"" !~ '^(?:v\')$' OR "ln\"" IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -58,12 +59,14 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE ("ln" IS NULL) AND ("ln" IS NOT NULL) AND ("ln" ~ '') AND ("ln" !~ '') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE ("ln" IS NULL) AND ("ln" IS NOT NULL) AND ("ln" ~ '^(?:)$' OR "ln" IS NULL) AND ("ln" !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 	}
 
 	for _, c := range cases {
-		require.Equal(t, c.sql, queryToSQL(c.query))
+		result, err := queryToSQL(c.query)
+		require.Equal(t, c.err, err)
+		require.Equal(t, c.sql, result)
 	}
 
 }

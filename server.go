@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -39,7 +40,7 @@ type crateResponse struct {
 }
 
 // Convert a read query into a Crate SQL query.
-func queryToSQL(q *remote.Query) string {
+func queryToSQL(q *remote.Query) (string, error) {
 	selectors := make([]string, 0, len(q.Matchers)+2)
 	for _, m := range q.Matchers {
 		switch m.Type {
@@ -58,43 +59,61 @@ func queryToSQL(q *remote.Query) string {
 				selectors = append(selectors, fmt.Sprintf("(%s != %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 			}
 		case remote.MatchType_REGEX_MATCH:
-			// XXX Handle that null == empty string.
+			re := "^(?:" + m.Value + ")$"
+			matchesEmpty, err := regexp.MatchString(re, "")
+			if err != nil {
+				return "", err
+			}
 			// Crate regexes are not RE2, so there may be small semantic differences here.
-			selectors = append(selectors, fmt.Sprintf("(%s ~ %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
+			if matchesEmpty {
+				selectors = append(selectors, fmt.Sprintf("(%s ~ %s OR %s IS NULL)", escapeLabelName(m.Name), escapeLabelValue(re), escapeLabelName(m.Name)))
+			} else {
+				selectors = append(selectors, fmt.Sprintf("(%s ~ %s)", escapeLabelName(m.Name), escapeLabelValue(re)))
+			}
 		case remote.MatchType_REGEX_NO_MATCH:
-			selectors = append(selectors, fmt.Sprintf("(%s !~ %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
+			re := "^(?:" + m.Value + ")$"
+			matchesEmpty, err := regexp.MatchString(re, "")
+			if err != nil {
+				return "", err
+			}
+			if matchesEmpty {
+				selectors = append(selectors, fmt.Sprintf("(%s !~ %s)", escapeLabelName(m.Name), escapeLabelValue(re)))
+			} else {
+				selectors = append(selectors, fmt.Sprintf("(%s !~ %s OR %s IS NULL)", escapeLabelName(m.Name), escapeLabelValue(re), escapeLabelName(m.Name)))
+			}
 		}
 	}
 	selectors = append(selectors, fmt.Sprintf("(timestamp <= %d)", q.EndTimestampMs))
 	selectors = append(selectors, fmt.Sprintf("(timestamp >= %d)", q.StartTimestampMs))
 
-	return fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND "))
+	return fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND ")), nil
 }
 
-func runQuery(q *remote.Query) []*remote.TimeSeries {
-	resp := []*remote.TimeSeries{}
-
-	query := queryToSQL(q)
+func runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
+	query, err := queryToSQL(q)
+	if err != nil {
+		return nil, err
+	}
 
 	request := crateRequest{Stmt: query}
 	jsonRequest, err := json.Marshal(request)
 	if err != nil {
-		return resp
+		return nil, err
 	}
 
 	result, err := http.Post("http://localhost:4200/_sql", "application/json", bytes.NewReader(jsonRequest))
 	if err != nil {
-		return resp
+		return nil, err
 	}
 	defer result.Body.Close()
 	if result.StatusCode != http.StatusOK {
-		return resp
+		return nil, err
 	}
 	var data crateResponse
 	decoder := json.NewDecoder(result.Body)
 	decoder.UseNumber()
 	if err = decoder.Decode(&data); err != nil {
-		return resp
+		return nil, err
 	}
 
 	timeseries := map[string]*remote.TimeSeries{}
@@ -124,10 +143,11 @@ func runQuery(q *remote.Query) []*remote.TimeSeries {
 		ts.Samples = append(ts.Samples, &remote.Sample{Value: v, TimestampMs: t})
 	}
 
+	resp := make([]*remote.TimeSeries, 0, len(timeseries))
 	for _, ts := range timeseries {
 		resp = append(resp, ts)
 	}
-	return resp
+	return resp, nil
 }
 
 func main() {
@@ -245,9 +265,14 @@ func main() {
 			return
 		}
 
+		result, err := runQuery(req.Queries[0])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		resp := remote.ReadResponse{
 			Results: []*remote.QueryResult{
-				{Timeseries: runQuery(req.Queries[0])},
+				{Timeseries: result},
 			},
 		}
 		data, err := proto.Marshal(&resp)
