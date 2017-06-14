@@ -89,7 +89,12 @@ func queryToSQL(q *remote.Query) (string, error) {
 	return fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND ")), nil
 }
 
-func runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
+type crateAdapter struct {
+	client http.Client
+	url    string
+}
+
+func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
 	query, err := queryToSQL(q)
 	if err != nil {
 		return nil, err
@@ -101,7 +106,7 @@ func runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
 		return nil, err
 	}
 
-	result, err := http.Post("http://localhost:4200/_sql", "application/json", bytes.NewReader(jsonRequest))
+	result, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
 	if err != nil {
 		return nil, err
 	}
@@ -150,143 +155,150 @@ func runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
 	return resp, nil
 }
 
-func main() {
-	http.HandleFunc("/write", func(w http.ResponseWriter, r *http.Request) {
-		compressed, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
+	compressed, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	reqBuf, err := snappy.Decode(nil, compressed)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var req remote.ReadRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if len(req.Queries) != 1 {
+		http.Error(w, "Can only handle one query.", http.StatusBadRequest)
+		return
+	}
+
+	result, err := ca.runQuery(req.Queries[0])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	resp := remote.ReadResponse{
+		Results: []*remote.QueryResult{
+			{Timeseries: result},
+		},
+	}
+	data, err := proto.Marshal(&resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/x-protobuf")
+	if _, err := w.Write(snappy.Encode(nil, data)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
+	compressed, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	reqBuf, err := snappy.Decode(nil, compressed)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var req remote.WriteRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Build a list of every label name used.
+	labelsUsed := map[string]struct{}{}
+	for _, ts := range req.Timeseries {
+		for _, l := range ts.Labels {
+			labelsUsed[l.Name] = struct{}{}
+		}
+	}
+	labels := make([]string, 0, len(labelsUsed))
+	escapedLabels := make([]string, 0, len(labelsUsed))
+
+	for l := range labelsUsed {
+		labels = append(labels, l)
+		escapedLabels = append(escapedLabels, escapeLabelName(l))
+	}
+
+	request := crateRequest{
+		BulkArgs: make([][]interface{}, 0, len(req.Timeseries)),
+	}
+	placeholders := strings.Repeat("?, ", len(labels))
+	columns := strings.Join(escapedLabels, ", ")
+	request.Stmt = fmt.Sprintf("INSERT INTO metrics (%s, \"value\", \"valueRaw\", \"timestamp\") VALUES (%s ?, ?, ?)", columns, placeholders)
+
+	for _, ts := range req.Timeseries {
+		metric := make(map[string]string, len(ts.Labels))
+		for _, l := range ts.Labels {
+			metric[l.Name] = l.Value
 		}
 
-		reqBuf, err := snappy.Decode(nil, compressed)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		var req remote.WriteRequest
-		if err := proto.Unmarshal(reqBuf, &req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Build a list of every label name used.
-		labelsUsed := map[string]struct{}{}
-		for _, ts := range req.Timeseries {
-			for _, l := range ts.Labels {
-				labelsUsed[l.Name] = struct{}{}
-			}
-		}
-		labels := make([]string, 0, len(labelsUsed))
-		escapedLabels := make([]string, 0, len(labelsUsed))
-
-		for l := range labelsUsed {
-			labels = append(labels, l)
-			escapedLabels = append(escapedLabels, escapeLabelName(l))
-		}
-
-		request := crateRequest{
-			BulkArgs: make([][]interface{}, 0, len(req.Timeseries)),
-		}
-		placeholders := strings.Repeat("?, ", len(labels))
-		columns := strings.Join(escapedLabels, ", ")
-		request.Stmt = fmt.Sprintf("INSERT INTO metrics (%s, \"value\", \"valueRaw\", \"timestamp\") VALUES (%s ?, ?, ?)", columns, placeholders)
-
-		for _, ts := range req.Timeseries {
-			metric := make(map[string]string, len(ts.Labels))
-			for _, l := range ts.Labels {
-				metric[l.Name] = l.Value
-			}
-
-			for _, s := range ts.Samples {
-				args := make([]interface{}, 0, len(labels)+2)
-				for _, l := range labels {
-					if metric[l] == "" {
-						args = append(args, nil)
-					} else {
-						args = append(args, metric[l])
-					}
+		for _, s := range ts.Samples {
+			args := make([]interface{}, 0, len(labels)+2)
+			for _, l := range labels {
+				if metric[l] == "" {
+					args = append(args, nil)
+				} else {
+					args = append(args, metric[l])
 				}
-				// Convert to string to handle NaN/Inf/-Inf
-				args = append(args, fmt.Sprintf("%f", s.Value))
-				// Crate.io can't handle full NaN values as required by Prometheus 2.0,
-				// so store the raw bits as an int64.
-				args = append(args, int64(math.Float64bits(s.Value)))
-				args = append(args, s.TimestampMs)
-
-				request.BulkArgs = append(request.BulkArgs, args)
 			}
-		}
+			// Convert to string to handle NaN/Inf/-Inf
+			args = append(args, fmt.Sprintf("%f", s.Value))
+			// Crate.io can't handle full NaN values as required by Prometheus 2.0,
+			// so store the raw bits as an int64.
+			args = append(args, int64(math.Float64bits(s.Value)))
+			args = append(args, s.TimestampMs)
 
-		jsonRequest, err := json.Marshal(request)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			request.BulkArgs = append(request.BulkArgs, args)
 		}
+	}
 
-		resp, err := http.Post("http://localhost:4200/_sql", "application/json", bytes.NewReader(jsonRequest))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer resp.Body.Close()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if resp.StatusCode != http.StatusOK {
-			respBody, _ := ioutil.ReadAll(resp.Body)
-			fmt.Println(string(respBody))
-			http.Error(w, string(respBody), http.StatusInternalServerError)
-		}
-	})
+	jsonRequest, err := json.Marshal(request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	http.HandleFunc("/read", func(w http.ResponseWriter, r *http.Request) {
-		compressed, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	resp, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(respBody))
+		http.Error(w, string(respBody), http.StatusInternalServerError)
+	}
+}
 
-		reqBuf, err := snappy.Decode(nil, compressed)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+func main() {
+	ca := crateAdapter{
+		client: http.Client{},
+		url:    "http://localhost:4200/_sql",
+	}
 
-		var req remote.ReadRequest
-		if err := proto.Unmarshal(reqBuf, &req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if len(req.Queries) != 1 {
-			http.Error(w, "Can only handle one query.", http.StatusBadRequest)
-			return
-		}
-
-		result, err := runQuery(req.Queries[0])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		resp := remote.ReadResponse{
-			Results: []*remote.QueryResult{
-				{Timeseries: result},
-			},
-		}
-		data, err := proto.Marshal(&resp)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/x-protobuf")
-		if _, err := w.Write(snappy.Encode(nil, data)); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	})
-
+	http.HandleFunc("/write", ca.handleWrite)
+	http.HandleFunc("/read", ca.handleRead)
 	http.ListenAndServe(":1234", nil)
 }
