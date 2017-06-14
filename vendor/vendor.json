@@ -17,6 +17,13 @@
 			"revisionTime": "2017-06-07T09:40:29Z"
 		},
 		{
+			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
+		},
+		{
 			"checksumSHA1": "kBeNcaKk56FguvPSUCEaH6AxpRc=",
 			"path": "github.com/golang/protobuf/proto",
 			"revision": "2bba0603135d7d7f5cb73b2125beeda19c09f4ef",
@@ -48,6 +55,13 @@
 			"path": "github.com/opentracing/opentracing-go/log",
 			"revision": "bfa37c8ee39d11078662dce16c162a61dccf616c",
 			"revisionTime": "2017-06-07T09:40:29Z"
+		},
+		{
+			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
+			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
 		},
 		{
 			"checksumSHA1": "d2irkxoHgazkTuLIvJGiYwagl8o=",
@@ -168,6 +182,18 @@
 			"path": "github.com/prometheus/prometheus/util/testutil",
 			"revision": "bfa37c8ee39d11078662dce16c162a61dccf616c",
 			"revisionTime": "2017-06-07T09:40:29Z"
+		},
+		{
+			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
+		},
+		{
+			"checksumSHA1": "P9FJpir2c4G5PA46qEkaWy3l60U=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "c5d7a69bf8a2c9c374798160849c071093e41dd1",
+			"revisionTime": "2016-04-18T22:58:27Z"
 		},
 		{
 			"checksumSHA1": "VhcnDY37sYAnL8WjfYQN9YYl+W4=",

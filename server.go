@@ -33,9 +33,8 @@ type crateResponse struct {
 	Rows [][]interface{} `json:"rows,omitempty"`
 }
 
-func runQuery(q *remote.Query) []*remote.TimeSeries {
-	resp := []*remote.TimeSeries{}
-
+// Convert a read query into a Crate SQL query.
+func queryToSQL(q *remote.Query) string {
 	selectors := make([]string, 0, len(q.Matchers)+2)
 	for _, m := range q.Matchers {
 		switch m.Type {
@@ -64,7 +63,13 @@ func runQuery(q *remote.Query) []*remote.TimeSeries {
 	selectors = append(selectors, fmt.Sprintf("(timestamp <= %d)", q.EndTimestampMs))
 	selectors = append(selectors, fmt.Sprintf("(timestamp >= %d)", q.StartTimestampMs))
 
-	query := fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND "))
+	return fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND "))
+}
+
+func runQuery(q *remote.Query) []*remote.TimeSeries {
+	resp := []*remote.TimeSeries{}
+
+	query := queryToSQL(q)
 
 	request := crateRequest{Stmt: query}
 	jsonRequest, err := json.Marshal(request)
