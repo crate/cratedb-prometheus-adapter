@@ -18,9 +18,14 @@ import (
 // Escaping for strings for Crate.io SQL.
 var escaper = strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "'", "\\'")
 
-// Escape a string for use in SQL.
-func escape(s, quote string) string {
-	return quote + escaper.Replace(s) + quote
+// Escape a labelname for use in SQL as a column name.
+func escapeLabelName(s string) string {
+	return "\"l" + escaper.Replace(s) + "\""
+}
+
+// Escape a labelvalue for use in SQL as a string value.
+func escapeLabelValue(s string) string {
+	return "'" + escaper.Replace(s) + "'"
 }
 
 type crateRequest struct {
@@ -42,22 +47,22 @@ func queryToSQL(q *remote.Query) string {
 			if m.Value == "" {
 				// Empty labels are recorded as NULL.
 				// In PromQL, empty labels and missing labels are the same thing.
-				selectors = append(selectors, fmt.Sprintf("(%s IS NULL)", escape("l"+m.Name, "\"")))
+				selectors = append(selectors, fmt.Sprintf("(%s IS NULL)", escapeLabelName(m.Name)))
 			} else {
-				selectors = append(selectors, fmt.Sprintf("(%s = %s)", escape("l"+m.Name, "\""), escape(m.Value, "'")))
+				selectors = append(selectors, fmt.Sprintf("(%s = %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 			}
 		case remote.MatchType_NOT_EQUAL:
 			if m.Value == "" {
-				selectors = append(selectors, fmt.Sprintf("(%s IS NOT NULL)", escape("l"+m.Name, "\"")))
+				selectors = append(selectors, fmt.Sprintf("(%s IS NOT NULL)", escapeLabelName(m.Name)))
 			} else {
-				selectors = append(selectors, fmt.Sprintf("(%s != %s)", escape("l"+m.Name, "\""), escape(m.Value, "'")))
+				selectors = append(selectors, fmt.Sprintf("(%s != %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 			}
 		case remote.MatchType_REGEX_MATCH:
 			// XXX Handle that null == empty string.
 			// Crate regexes are not RE2, so there may be small semantic differences here.
-			selectors = append(selectors, fmt.Sprintf("(%s ~ %s)", escape("l"+m.Name, "\""), escape(m.Value, "'")))
+			selectors = append(selectors, fmt.Sprintf("(%s ~ %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 		case remote.MatchType_REGEX_NO_MATCH:
-			selectors = append(selectors, fmt.Sprintf("(%s !~ %s)", escape("l"+m.Name, "\""), escape(m.Value, "'")))
+			selectors = append(selectors, fmt.Sprintf("(%s !~ %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 		}
 	}
 	selectors = append(selectors, fmt.Sprintf("(timestamp <= %d)", q.EndTimestampMs))
@@ -157,7 +162,7 @@ func main() {
 
 		for l := range labelsUsed {
 			labels = append(labels, l)
-			escapedLabels = append(escapedLabels, escape("l"+l, "\""))
+			escapedLabels = append(escapedLabels, escapeLabelName(l))
 		}
 
 		request := crateRequest{
