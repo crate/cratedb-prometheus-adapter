@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -89,6 +90,51 @@ func queryToSQL(q *remote.Query) (string, error) {
 	return fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND ")), nil
 }
 
+func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
+	timeseries := map[string]*remote.TimeSeries{}
+	for _, row := range data.Rows {
+		metric := model.Metric{}
+		var v float64
+		var t int64
+		for i, value := range row {
+			column := data.Cols[i]
+			if column[0] == 'l' && value != nil {
+				metric[model.LabelName(column[1:])] = model.LabelValue(value.(string))
+			} else if column == "timestamp" {
+				t, _ = value.(json.Number).Int64()
+			} else if column == "valueRaw" {
+				val, _ := value.(json.Number).Int64()
+				v = math.Float64frombits(uint64(val))
+			}
+		}
+		ts, ok := timeseries[metric.String()]
+		if !ok {
+			ts = &remote.TimeSeries{}
+			labelnames := make([]string, 0, len(metric))
+			for k := range metric {
+				labelnames = append(labelnames, string(k))
+			}
+			sort.Strings(labelnames) // Sort for unittests.
+			for _, k := range labelnames {
+				ts.Labels = append(ts.Labels, &remote.LabelPair{Name: string(k), Value: string(metric[model.LabelName(k)])})
+			}
+			timeseries[metric.String()] = ts
+		}
+		ts.Samples = append(ts.Samples, &remote.Sample{Value: v, TimestampMs: t})
+	}
+
+	names := make([]string, 0, len(timeseries))
+	for k := range timeseries {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	resp := make([]*remote.TimeSeries, 0, len(timeseries))
+	for _, name := range names {
+		resp = append(resp, timeseries[name])
+	}
+	return resp
+}
+
 type crateAdapter struct {
 	client http.Client
 	url    string
@@ -121,38 +167,8 @@ func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) 
 		return nil, err
 	}
 
-	timeseries := map[string]*remote.TimeSeries{}
-	for _, row := range data.Rows {
-		metric := model.Metric{}
-		var v float64
-		var t int64
-		for i, value := range row {
-			column := data.Cols[i]
-			if column[0] == 'l' && value != nil {
-				metric[model.LabelName(column[1:])] = model.LabelValue(value.(string))
-			} else if column == "timestamp" {
-				t, _ = value.(json.Number).Int64()
-			} else if column == "valueRaw" {
-				val, _ := value.(json.Number).Int64()
-				v = math.Float64frombits(uint64(val))
-			}
-		}
-		ts, ok := timeseries[metric.String()]
-		if !ok {
-			ts = &remote.TimeSeries{}
-			for k, v := range metric {
-				ts.Labels = append(ts.Labels, &remote.LabelPair{Name: string(k), Value: string(v)})
-			}
-			timeseries[metric.String()] = ts
-		}
-		ts.Samples = append(ts.Samples, &remote.Sample{Value: v, TimestampMs: t})
-	}
-
-	resp := make([]*remote.TimeSeries, 0, len(timeseries))
-	for _, ts := range timeseries {
-		resp = append(resp, ts)
-	}
-	return resp, nil
+	timeseries := responseToTimeseries(&data)
+	return timeseries, nil
 }
 
 func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
