@@ -218,25 +218,7 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
-	compressed, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	reqBuf, err := snappy.Decode(nil, compressed)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var req remote.WriteRequest
-	if err := proto.Unmarshal(reqBuf, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+func writesToCrateRequest(req *remote.WriteRequest) *crateRequest {
 	// Build a list of every label name used.
 	labelsUsed := map[string]struct{}{}
 	for _, ts := range req.Timeseries {
@@ -245,14 +227,17 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	labels := make([]string, 0, len(labelsUsed))
-	escapedLabels := make([]string, 0, len(labelsUsed))
 
 	for l := range labelsUsed {
 		labels = append(labels, l)
+	}
+	sort.Strings(labels)
+	escapedLabels := make([]string, 0, len(labelsUsed))
+	for _, l := range labels {
 		escapedLabels = append(escapedLabels, escapeLabelName(l))
 	}
 
-	request := crateRequest{
+	request := &crateRequest{
 		BulkArgs: make([][]interface{}, 0, len(req.Timeseries)),
 	}
 	placeholders := strings.Repeat("?, ", len(labels))
@@ -284,7 +269,29 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 			request.BulkArgs = append(request.BulkArgs, args)
 		}
 	}
+	return request
+}
 
+func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
+	compressed, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	reqBuf, err := snappy.Decode(nil, compressed)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var req remote.WriteRequest
+	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	request := writesToCrateRequest(&req)
 	jsonRequest, err := json.Marshal(request)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

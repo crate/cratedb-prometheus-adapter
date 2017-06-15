@@ -91,11 +91,11 @@ func TestResponseToTimeseries(t *testing.T) {
 		return json.Number(fmt.Sprintf("%d", i))
 	}
 	cases := []struct {
-		data       crateResponse
+		data       *crateResponse
 		timeseries []*remote.TimeSeries
 	}{
 		{
-			data: crateResponse{
+			data: &crateResponse{
 				Cols: []string{"timestamp", "valueRaw", "value", "l__name__", "ljob", "lempty"},
 				Rows: [][]interface{}{
 					{intToNumber(1000), floatToNumber(1), 1, "metric", "j", nil},
@@ -122,7 +122,7 @@ func TestResponseToTimeseries(t *testing.T) {
 			},
 		},
 		{
-			data: crateResponse{
+			data: &crateResponse{
 				Cols: []string{"timestamp", "valueRaw", "value", "l__name__", "ljob", "lempty"},
 				Rows: [][]interface{}{
 					{intToNumber(1000), floatToNumber(1), 1, "a", "j", nil},
@@ -153,8 +153,93 @@ func TestResponseToTimeseries(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		result := responseToTimeseries(&c.data)
+		result := responseToTimeseries(c.data)
 		require.Equal(t, c.timeseries, result)
+	}
+
+}
+
+func TestWritesToCrateRequest(t *testing.T) {
+	cases := []struct {
+		series  []*remote.TimeSeries
+		request *crateRequest
+	}{
+		{
+			series: []*remote.TimeSeries{
+				{
+					Labels: []*remote.LabelPair{
+						&remote.LabelPair{Name: "__name__", Value: "metric"},
+						&remote.LabelPair{Name: "job", Value: "j"},
+					},
+					Samples: []*remote.Sample{
+						{Value: 1, TimestampMs: 1000},
+						{Value: 2, TimestampMs: 2000},
+						{Value: -1, TimestampMs: 3000},
+					},
+				},
+			},
+			request: &crateRequest{
+				Stmt: `INSERT INTO metrics ("l__name__", "ljob", "value", "valueRaw", "timestamp") VALUES (?, ?,  ?, ?, ?)`,
+				BulkArgs: [][]interface{}{
+					{"metric", "j", "1.000000", int64(4607182418800017408), int64(1000)},
+					{"metric", "j", "2.000000", int64(4611686018427387904), int64(2000)},
+					{"metric", "j", "-1.000000", int64(-4616189618054758400), int64(3000)},
+				},
+			},
+		},
+		{
+			series: []*remote.TimeSeries{
+				{
+					Labels: []*remote.LabelPair{
+						&remote.LabelPair{Name: "__name__", Value: "a"},
+						&remote.LabelPair{Name: "job", Value: "j"},
+					},
+					Samples: []*remote.Sample{
+						{Value: 1, TimestampMs: 1000},
+					},
+				},
+				{
+					Labels: []*remote.LabelPair{
+						&remote.LabelPair{Name: "__name__", Value: "b"},
+						&remote.LabelPair{Name: "job", Value: "j"},
+						&remote.LabelPair{Name: "foo", Value: "bar"},
+					},
+					Samples: []*remote.Sample{
+						{Value: 2, TimestampMs: 1000},
+					},
+				},
+			},
+			request: &crateRequest{
+				Stmt: `INSERT INTO metrics ("l__name__", "lfoo", "ljob", "value", "valueRaw", "timestamp") VALUES (?, ?, ?,  ?, ?, ?)`,
+				BulkArgs: [][]interface{}{
+					{"a", nil, "j", "1.000000", int64(4607182418800017408), int64(1000)},
+					{"b", "bar", "j", "2.000000", int64(4611686018427387904), int64(1000)},
+				},
+			},
+		},
+		{
+			series: []*remote.TimeSeries{
+				{
+					Labels: []*remote.LabelPair{
+						&remote.LabelPair{Name: "\"'", Value: "\"'"},
+					},
+					Samples: []*remote.Sample{
+						{Value: 1, TimestampMs: 1000},
+					},
+				},
+			},
+			request: &crateRequest{
+				Stmt: `INSERT INTO metrics ("l\"\'", "value", "valueRaw", "timestamp") VALUES (?,  ?, ?, ?)`,
+				BulkArgs: [][]interface{}{
+					{"\"'", "1.000000", int64(4607182418800017408), int64(1000)},
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		result := writesToCrateRequest(&remote.WriteRequest{Timeseries: c.series})
+		require.Equal(t, c.request, result)
 	}
 
 }
