@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"regexp/syntax"
 	"testing"
 
 	"github.com/prometheus/prometheus/storage/remote"
@@ -63,6 +64,14 @@ func TestQueryToSQL(t *testing.T) {
 				EndTimestampMs:   2000,
 			},
 			sql: `SELECT * from metrics WHERE ("ln" IS NULL) AND ("ln" IS NOT NULL) AND ("ln" ~ '^(?:)$' OR "ln" IS NULL) AND ("ln" !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+		},
+		{
+			query: &remote.Query{
+				Matchers: []*remote.LabelMatcher{
+					{Type: remote.MatchType_REGEX_MATCH, Name: "n", Value: "*"},
+				},
+			},
+			err: &syntax.Error{Code: "missing argument to repetition operator", Expr: "*"},
 		},
 	}
 
