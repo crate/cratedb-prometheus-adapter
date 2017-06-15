@@ -14,6 +14,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/storage/remote"
 )
@@ -21,7 +23,61 @@ import (
 var (
 	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
 	crateURL      = flag.String("crate.url", "http://localhost:4200/_sql", "URL to send Crate SQL to.")
+
+	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "crate_adapter_write_latency_seconds",
+		Help: "How long it took us to respond to write requests.",
+	})
+	writeErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "crate_adapter_write_failed_total",
+		Help: "How many write request we returned errors for.",
+	})
+	writeSamples = prometheus.NewSummary(prometheus.SummaryOpts{
+		Name: "crate_adapter_write_timeseries_samples",
+		Help: "How many samples each written timeseries has.",
+	})
+	writeCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "crate_adapter_write_crate_latency_seconds",
+		Help: "Latency for inserts to Crate.",
+	})
+	writeCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "crate_adapter_write_crate_failed_total",
+		Help: "How many inserts to Crate failed.",
+	})
+	readDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "crate_adapter_read_latency_seconds",
+		Help: "How long it took us to respond to read requests.",
+	})
+	readErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "crate_adapter_read_failed_total",
+		Help: "How many read requests we returned errors for.",
+	})
+	readCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "crate_adapter_read_crate_latency_seconds",
+		Help: "Latency for selects from Crate.",
+	})
+	readCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "crate_adapter_read_crate_failed_total",
+		Help: "How many selects from Crate failed.",
+	})
+	readSamples = prometheus.NewSummary(prometheus.SummaryOpts{
+		Name: "crate_adapter_read_timeseries_samples",
+		Help: "How many samples each returned timeseries has.",
+	})
 )
+
+func init() {
+	prometheus.MustRegister(writeDuration)
+	prometheus.MustRegister(writeErrors)
+	prometheus.MustRegister(writeSamples)
+	prometheus.MustRegister(writeCrateDuration)
+	prometheus.MustRegister(writeCrateErrors)
+	prometheus.MustRegister(readDuration)
+	prometheus.MustRegister(readErrors)
+	prometheus.MustRegister(readSamples)
+	prometheus.MustRegister(readCrateDuration)
+	prometheus.MustRegister(readCrateErrors)
+}
 
 // Escaping for strings for Crate.io SQL.
 var escaper = strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "'", "\\'")
@@ -136,6 +192,7 @@ func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
 	sort.Strings(names)
 	resp := make([]*remote.TimeSeries, 0, len(timeseries))
 	for _, name := range names {
+		writeSamples.Observe(float64(len(timeseries[name].Samples)))
 		resp = append(resp, timeseries[name])
 	}
 	return resp
@@ -158,12 +215,16 @@ func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) 
 		return nil, err
 	}
 
+	timer := prometheus.NewTimer(readCrateDuration)
 	result, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
+	timer.ObserveDuration()
 	if err != nil {
+		readCrateErrors.Inc()
 		return nil, err
 	}
 	defer result.Body.Close()
 	if result.StatusCode != http.StatusOK {
+		readCrateErrors.Inc()
 		return nil, err
 	}
 	var data crateResponse
@@ -178,6 +239,9 @@ func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) 
 }
 
 func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
+	timer := prometheus.NewTimer(readDuration)
+	defer timer.ObserveDuration()
+
 	compressed, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -274,11 +338,15 @@ func writesToCrateRequest(req *remote.WriteRequest) *crateRequest {
 
 			request.BulkArgs = append(request.BulkArgs, args)
 		}
+		writeSamples.Observe(float64(len(ts.Samples)))
 	}
 	return request
 }
 
 func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
+	timer := prometheus.NewTimer(writeDuration)
+	defer timer.ObserveDuration()
+
 	compressed, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -304,20 +372,21 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	writeTimer := prometheus.NewTimer(writeCrateDuration)
 	resp, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
+	writeTimer.ObserveDuration()
 	if err != nil {
+		writeCrateErrors.Inc()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	if resp.StatusCode != http.StatusOK {
+		writeCrateErrors.Inc()
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		fmt.Println(string(respBody))
 		http.Error(w, string(respBody), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -338,5 +407,6 @@ func main() {
 
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
+	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(*listenAddress, nil)
 }
