@@ -16,6 +16,7 @@ import (
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/storage/remote"
 )
@@ -214,6 +215,7 @@ func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) 
 	if err != nil {
 		return nil, err
 	}
+	log.With("json", string(jsonRequest)).Debug("Select from Crate")
 
 	timer := prometheus.NewTimer(readCrateDuration)
 	result, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
@@ -244,29 +246,34 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 
 	compressed, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.With("err", err).Error("Failed to read body.")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	reqBuf, err := snappy.Decode(nil, compressed)
 	if err != nil {
+		log.With("err", err).Error("Failed to decompress body.")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var req remote.ReadRequest
 	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		log.With("err", err).Error("Failed to unmarshal body.")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if len(req.Queries) != 1 {
+		log.Error("More than one query sent.")
 		http.Error(w, "Can only handle one query.", http.StatusBadRequest)
 		return
 	}
 
 	result, err := ca.runQuery(req.Queries[0])
 	if err != nil {
+		log.With("err", err).Error("Failed to run select against Crate.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -277,12 +284,14 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := proto.Marshal(&resp)
 	if err != nil {
+		log.With("err", err).Error("Failed to marshal response.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	if _, err := w.Write(snappy.Encode(nil, data)); err != nil {
+		log.With("err", err).Error("Failed to compress response.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -349,18 +358,21 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 
 	compressed, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.With("err", err).Error("Failed to read body")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	reqBuf, err := snappy.Decode(nil, compressed)
 	if err != nil {
+		log.With("err", err).Error("Failed to decompress body")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var req remote.WriteRequest
 	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		log.With("err", err).Error("Failed to unmarshal body")
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -368,15 +380,18 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	request := writesToCrateRequest(&req)
 	jsonRequest, err := json.Marshal(request)
 	if err != nil {
+		log.With("err", err).Error("Failed to marshal json write request")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.With("json", string(jsonRequest)).Debug("Insert to Crate")
 
 	writeTimer := prometheus.NewTimer(writeCrateDuration)
 	resp, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
 	writeTimer.ObserveDuration()
 	if err != nil {
 		writeCrateErrors.Inc()
+		log.With("err", err).Error("Failed to POST inserts to Crate.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -384,7 +399,7 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	if resp.StatusCode != http.StatusOK {
 		writeCrateErrors.Inc()
 		respBody, _ := ioutil.ReadAll(resp.Body)
-		fmt.Println(string(respBody))
+		log.With("body", respBody).Error("Crate did not report success on insert.")
 		http.Error(w, string(respBody), http.StatusInternalServerError)
 		return
 	}
@@ -408,5 +423,6 @@ func main() {
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(*listenAddress, nil)
+	log.With("address", *listenAddress).Info("Listening")
+	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
