@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -15,6 +16,11 @@ import (
 	"github.com/golang/snappy"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/storage/remote"
+)
+
+var (
+	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
+	crateURL      = flag.String("crate.url", "http://localhost:4200/_sql", "URL to send Crate SQL to.")
 )
 
 // Escaping for strings for Crate.io SQL.
@@ -316,12 +322,21 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	flag.Parse()
 	ca := crateAdapter{
 		client: http.Client{},
-		url:    "http://localhost:4200/_sql",
+		url:    *crateURL,
 	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+    <head><title>Crate.io Prometheus Adapter</title></head>
+    <body>
+    <h1>Crate.io Prometheus Adapter</h1>
+    </body>
+    </html>`))
+	})
 
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
-	http.ListenAndServe(":1234", nil)
+	http.ListenAndServe(*listenAddress, nil)
 }
