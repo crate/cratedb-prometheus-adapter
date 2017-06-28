@@ -173,8 +173,8 @@ func TestWritesToCrateRequest(t *testing.T) {
 					},
 					Samples: []*remote.Sample{
 						{Value: 1, TimestampMs: 1000},
-						{Value: 2, TimestampMs: 2000},
-						{Value: -1, TimestampMs: 3000},
+						{Value: math.Inf(1), TimestampMs: 2000},
+						{Value: math.Inf(-1), TimestampMs: 3000},
 					},
 				},
 			},
@@ -182,8 +182,8 @@ func TestWritesToCrateRequest(t *testing.T) {
 				Stmt: `INSERT INTO metrics ("l__name__", "ljob", "value", "valueRaw", "timestamp") VALUES (?, ?,  ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
 					{"metric", "j", "1.000000", int64(4607182418800017408), int64(1000)},
-					{"metric", "j", "2.000000", int64(4611686018427387904), int64(2000)},
-					{"metric", "j", "-1.000000", int64(-4616189618054758400), int64(3000)},
+					{"metric", "j", "Infinity", int64(9218868437227405312), int64(2000)},
+					{"metric", "j", "-Infinity", int64(-4503599627370496), int64(3000)},
 				},
 			},
 		},

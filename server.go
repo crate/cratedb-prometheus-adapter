@@ -339,7 +339,14 @@ func writesToCrateRequest(req *remote.WriteRequest) *crateRequest {
 				}
 			}
 			// Convert to string to handle NaN/Inf/-Inf
-			args = append(args, fmt.Sprintf("%f", s.Value))
+			switch {
+			case math.IsInf(s.Value, 1):
+				args = append(args, "Infinity")
+			case math.IsInf(s.Value, -1):
+				args = append(args, "-Infinity")
+			default:
+				args = append(args, fmt.Sprintf("%f", s.Value))
+			}
 			// Crate.io can't handle full NaN values as required by Prometheus 2.0,
 			// so store the raw bits as an int64.
 			args = append(args, int64(math.Float64bits(s.Value)))
