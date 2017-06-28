@@ -17,11 +17,14 @@ go build
 Create the following table in your Crate database:
 
 ```
-CREATE TABLE metrics (
-  "value" double,
-  "valueRaw" long,
-  "timestamp" timestamp
-) WITH(column_policy = "dynamic");
+CREATE TABLE "metrics" (
+  "timestamp" TIMESTAMP,
+  "labels_hash" STRING,
+  "labels" OBJECT(DYNAMIC),
+  "value" DOUBLE,
+  "valueRaw" LONG,
+  PRIMARY KEY ("timestamp", "labels_hash")
+);
 ```
 
 Then run the adapter:

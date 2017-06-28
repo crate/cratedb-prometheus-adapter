@@ -7,6 +7,7 @@ import (
 	"regexp/syntax"
 	"testing"
 
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/storage/remote"
 	"github.com/stretchr/testify/require"
 )
@@ -36,21 +37,21 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE ("ln" = 'v') AND ("ln" != 'v') AND ("ln" ~ '^(?:v)$') AND ("ln" !~ '^(?:v)$' OR "ln" IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE (labels['ln'] = 'v') AND (labels['ln'] != 'v') AND (labels['ln'] ~ '^(?:v)$') AND (labels['ln'] !~ '^(?:v)$' OR labels['ln'] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
 				Matchers: []*remote.LabelMatcher{
 					// These are not valid label names, but test the escaping anyway.
-					{Type: remote.MatchType_EQUAL, Name: "n\"", Value: "v'"},
-					{Type: remote.MatchType_NOT_EQUAL, Name: "n\"", Value: "v'"},
-					{Type: remote.MatchType_REGEX_MATCH, Name: "n\"", Value: "v'"},
-					{Type: remote.MatchType_REGEX_NO_MATCH, Name: "n\"", Value: "v'"},
+					{Type: remote.MatchType_EQUAL, Name: "n'", Value: "v'"},
+					{Type: remote.MatchType_NOT_EQUAL, Name: "n'", Value: "v'"},
+					{Type: remote.MatchType_REGEX_MATCH, Name: "n'", Value: "v'"},
+					{Type: remote.MatchType_REGEX_NO_MATCH, Name: "n'", Value: "v'"},
 				},
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE ("ln\"" = 'v\'') AND ("ln\"" != 'v\'') AND ("ln\"" ~ '^(?:v\')$') AND ("ln\"" !~ '^(?:v\')$' OR "ln\"" IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE (labels['ln\''] = 'v\'') AND (labels['ln\''] != 'v\'') AND (labels['ln\''] ~ '^(?:v\')$') AND (labels['ln\''] !~ '^(?:v\')$' OR labels['ln\''] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -63,7 +64,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE ("ln" IS NULL) AND ("ln" IS NOT NULL) AND ("ln" ~ '^(?:)$' OR "ln" IS NULL) AND ("ln" !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE (labels['ln'] IS NULL) AND (labels['ln'] IS NOT NULL) AND (labels['ln'] ~ '^(?:)$' OR labels['ln'] IS NULL) AND (labels['ln'] !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -96,14 +97,14 @@ func TestResponseToTimeseries(t *testing.T) {
 	}{
 		{
 			data: &crateResponse{
-				Cols: []string{"timestamp", "valueRaw", "value", "l__name__", "ljob", "lempty"},
+				Cols: []string{"timestamp", "valueRaw", "value", "labels", "labels_hash"},
 				Rows: [][]interface{}{
-					{intToNumber(1000), floatToNumber(1), 1, "metric", "j", nil},
-					{intToNumber(2000), floatToNumber(2), 2, "metric", "j", nil},
+					{intToNumber(1000), floatToNumber(1), 1, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
+					{intToNumber(2000), floatToNumber(2), 2, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
 					// Value is purposely wrong, so we know we're using valueRaw.
-					{intToNumber(3000), floatToNumber(3), 0, "metric", "j", nil},
+					{intToNumber(3000), floatToNumber(3), 0, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
 					// Test a negative, which has the most significant bit set.
-					{intToNumber(4000), floatToNumber(-1), -1, "metric", "j", nil},
+					{intToNumber(4000), floatToNumber(-1), -1, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
 				},
 			},
 			timeseries: []*remote.TimeSeries{
@@ -123,10 +124,10 @@ func TestResponseToTimeseries(t *testing.T) {
 		},
 		{
 			data: &crateResponse{
-				Cols: []string{"timestamp", "valueRaw", "value", "l__name__", "ljob", "lempty"},
+				Cols: []string{"timestamp", "valueRaw", "value", "labels", "labels_hash"},
 				Rows: [][]interface{}{
-					{intToNumber(1000), floatToNumber(1), 1, "a", "j", nil},
-					{intToNumber(1000), floatToNumber(2), 2, "b", "j", nil},
+					{intToNumber(1000), floatToNumber(1), 1, map[string]interface{}{"l__name__": "a", "ljob": "j"}, "XXX"},
+					{intToNumber(1000), floatToNumber(2), 2, map[string]interface{}{"l__name__": "b", "ljob": "j"}, "XXX"},
 				},
 			},
 			timeseries: []*remote.TimeSeries{
@@ -179,11 +180,11 @@ func TestWritesToCrateRequest(t *testing.T) {
 				},
 			},
 			request: &crateRequest{
-				Stmt: `INSERT INTO metrics ("l__name__", "ljob", "value", "valueRaw", "timestamp") VALUES (?, ?,  ?, ?, ?)`,
+				Stmt: `INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
-					{"metric", "j", "1.000000", int64(4607182418800017408), int64(1000)},
-					{"metric", "j", "Infinity", int64(9218868437227405312), int64(2000)},
-					{"metric", "j", "-Infinity", int64(-4503599627370496), int64(3000)},
+					{model.Metric{"l__name__": "metric", "ljob": "j"}, "990ae6389f9b0199", "1.000000", int64(4607182418800017408), int64(1000)},
+					{model.Metric{"l__name__": "metric", "ljob": "j"}, "990ae6389f9b0199", "Infinity", int64(9218868437227405312), int64(2000)},
+					{model.Metric{"l__name__": "metric", "ljob": "j"}, "990ae6389f9b0199", "-Infinity", int64(-4503599627370496), int64(3000)},
 				},
 			},
 		},
@@ -210,10 +211,10 @@ func TestWritesToCrateRequest(t *testing.T) {
 				},
 			},
 			request: &crateRequest{
-				Stmt: `INSERT INTO metrics ("l__name__", "lfoo", "ljob", "value", "valueRaw", "timestamp") VALUES (?, ?, ?,  ?, ?, ?)`,
+				Stmt: `INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
-					{"a", nil, "j", "1.000000", int64(4607182418800017408), int64(1000)},
-					{"b", "bar", "j", "2.000000", int64(4611686018427387904), int64(1000)},
+					{model.Metric{"l__name__": "a", "ljob": "j"}, "b1871e5badc72354", "1.000000", int64(4607182418800017408), int64(1000)},
+					{model.Metric{"l__name__": "b", "ljob": "j", "lfoo": "bar"}, "b2812e060fed451c", "2.000000", int64(4611686018427387904), int64(1000)},
 				},
 			},
 		},
@@ -229,9 +230,9 @@ func TestWritesToCrateRequest(t *testing.T) {
 				},
 			},
 			request: &crateRequest{
-				Stmt: `INSERT INTO metrics ("l\"\'", "value", "valueRaw", "timestamp") VALUES (?,  ?, ?, ?)`,
+				Stmt: `INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
-					{"\"'", "1.000000", int64(4607182418800017408), int64(1000)},
+					{model.Metric{"l\"'": "\"'"}, "e867c1ceab13b21f", "1.000000", int64(4607182418800017408), int64(1000)},
 				},
 			},
 		},

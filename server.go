@@ -85,7 +85,7 @@ var escaper = strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "'", "\\'")
 
 // Escape a labelname for use in SQL as a column name.
 func escapeLabelName(s string) string {
-	return "\"l" + escaper.Replace(s) + "\""
+	return "labels['l" + escaper.Replace(s) + "']"
 }
 
 // Escape a labelvalue for use in SQL as a string value.
@@ -160,12 +160,16 @@ func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
 		var v float64
 		var t int64
 		for i, value := range row {
-			column := data.Cols[i]
-			if column[0] == 'l' && value != nil {
-				metric[model.LabelName(column[1:])] = model.LabelValue(value.(string))
-			} else if column == "timestamp" {
+			switch data.Cols[i] {
+			case "labels":
+				labels := value.(map[string]interface{})
+				for k, v := range labels {
+					// lfoo -> foo.
+					metric[model.LabelName(k[1:])] = model.LabelValue(v.(string))
+				}
+			case "timestamp":
 				t, _ = value.(json.Number).Int64()
-			} else if column == "valueRaw" {
+			case "valueRaw":
 				val, _ := value.(json.Number).Int64()
 				v = math.Float64frombits(uint64(val))
 			}
@@ -298,47 +302,22 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 }
 
 func writesToCrateRequest(req *remote.WriteRequest) *crateRequest {
-	// Build a list of every label name used.
-	labelsUsed := map[string]struct{}{}
-	for _, ts := range req.Timeseries {
-		for _, l := range ts.Labels {
-			labelsUsed[l.Name] = struct{}{}
-		}
-	}
-	labels := make([]string, 0, len(labelsUsed))
-
-	for l := range labelsUsed {
-		labels = append(labels, l)
-	}
-	sort.Strings(labels)
-	escapedLabels := make([]string, 0, len(labelsUsed))
-	for _, l := range labels {
-		escapedLabels = append(escapedLabels, escapeLabelName(l))
-	}
-
 	request := &crateRequest{
 		BulkArgs: make([][]interface{}, 0, len(req.Timeseries)),
 	}
-	placeholders := strings.Repeat("?, ", len(labels))
-	columns := strings.Join(escapedLabels, ", ")
-	request.Stmt = fmt.Sprintf("INSERT INTO metrics (%s, \"value\", \"valueRaw\", \"timestamp\") VALUES (%s ?, ?, ?)", columns, placeholders)
+	request.Stmt = fmt.Sprintf(`INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`)
 
 	for _, ts := range req.Timeseries {
-		metric := make(map[string]string, len(ts.Labels))
+		metric := make(model.Metric, len(ts.Labels))
 		for _, l := range ts.Labels {
-			metric[l.Name] = l.Value
+			metric["l"+model.LabelName(l.Name)] = model.LabelValue(l.Value)
 		}
 
 		for _, s := range ts.Samples {
-			args := make([]interface{}, 0, len(labels)+2)
-			for _, l := range labels {
-				if metric[l] == "" {
-					args = append(args, nil)
-				} else {
-					args = append(args, metric[l])
-				}
-			}
-			// Convert to string to handle NaN/Inf/-Inf
+			args := make([]interface{}, 0, 5)
+			args = append(args, metric)
+			args = append(args, metric.Fingerprint().String())
+			// Convert to string to handle NaN/Inf/-Inf.
 			switch {
 			case math.IsInf(s.Value, 1):
 				args = append(args, "Infinity")
@@ -406,7 +385,7 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	if resp.StatusCode != http.StatusOK {
 		writeCrateErrors.Inc()
 		respBody, _ := ioutil.ReadAll(resp.Body)
-		log.With("body", respBody).Error("Crate did not report success on insert.")
+		log.With("body", string(respBody)).Error("Crate did not report success on insert.")
 		http.Error(w, string(respBody), http.StatusInternalServerError)
 		return
 	}
