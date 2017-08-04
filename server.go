@@ -2,16 +2,20 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/go-kit/kit/endpoint"
+	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
@@ -204,8 +208,7 @@ func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
 }
 
 type crateAdapter struct {
-	client http.Client
-	url    string
+	ep endpoint.Endpoint
 }
 
 func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
@@ -215,32 +218,15 @@ func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) 
 	}
 
 	request := crateRequest{Stmt: query}
-	jsonRequest, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-	log.With("json", string(jsonRequest)).Debug("Select from Crate")
 
 	timer := prometheus.NewTimer(readCrateDuration)
-	result, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
+	result, err := ca.ep(context.Background(), request)
 	timer.ObserveDuration()
 	if err != nil {
 		readCrateErrors.Inc()
 		return nil, err
 	}
-	defer result.Body.Close()
-	if result.StatusCode != http.StatusOK {
-		readCrateErrors.Inc()
-		return nil, err
-	}
-	var data crateResponse
-	decoder := json.NewDecoder(result.Body)
-	decoder.UseNumber()
-	if err = decoder.Decode(&data); err != nil {
-		return nil, err
-	}
-
-	timeseries := responseToTimeseries(&data)
+	timeseries := responseToTimeseries(result.(*crateResponse))
 	return timeseries, nil
 }
 
@@ -364,16 +350,9 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request := writesToCrateRequest(&req)
-	jsonRequest, err := json.Marshal(request)
-	if err != nil {
-		log.With("err", err).Error("Failed to marshal json write request")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	log.With("json", string(jsonRequest)).Debug("Insert to Crate")
 
 	writeTimer := prometheus.NewTimer(writeCrateDuration)
-	resp, err := ca.client.Post(ca.url, "application/json", bytes.NewReader(jsonRequest))
+	_, err = ca.ep(context.Background(), request)
 	writeTimer.ObserveDuration()
 	if err != nil {
 		writeCrateErrors.Inc()
@@ -381,21 +360,38 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		writeCrateErrors.Inc()
-		respBody, _ := ioutil.ReadAll(resp.Body)
-		log.With("body", string(respBody)).Error("Crate did not report success on insert.")
-		http.Error(w, string(respBody), http.StatusInternalServerError)
-		return
+}
+
+func encodeCrateRequest(_ context.Context, r *http.Request, request interface{}) error {
+	jsonRequest, err := json.Marshal(request)
+	if err != nil {
+		return err
 	}
+	log.With("json", string(jsonRequest)).Debug("Request to Crate")
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(jsonRequest))
+	return nil
+}
+
+func decodeCrateResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	var response crateResponse
+	decoder := json.NewDecoder(r.Body)
+	decoder.UseNumber()
+	if err := decoder.Decode(&response); err != nil {
+		return nil, err
+	}
+	return &response, nil
 }
 
 func main() {
 	flag.Parse()
+	u, _ := url.Parse(*crateURL)
+	ep := httptransport.NewClient(
+		"POST",
+		u,
+		encodeCrateRequest,
+		decodeCrateResponse).Endpoint()
 	ca := crateAdapter{
-		client: http.Client{},
-		url:    *crateURL,
+		ep: ep,
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
