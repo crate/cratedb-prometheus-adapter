@@ -13,8 +13,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/sd"
+	"github.com/go-kit/kit/sd/lb"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
@@ -27,7 +30,7 @@ import (
 
 var (
 	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
-	crateURL      = flag.String("crate.url", "http://localhost:4200/_sql", "URL to send Crate SQL to.")
+	crateURL      = flag.String("crate.url", "http://localhost:4200/_sql", "URL to send Crate SQL to. Can list multiple URLs comma seperated.")
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "crate_adapter_write_latency_seconds",
@@ -384,14 +387,30 @@ func decodeCrateResponse(_ context.Context, r *http.Response) (interface{}, erro
 
 func main() {
 	flag.Parse()
-	u, _ := url.Parse(*crateURL)
-	ep := httptransport.NewClient(
-		"POST",
-		u,
-		encodeCrateRequest,
-		decodeCrateResponse).Endpoint()
+
+	urls := strings.Split(*crateURL, ",")
+	if len(urls) == 0 {
+		log.Fatal("No URLs provided in -crate.url.")
+	}
+	subscriber := sd.FixedSubscriber{}
+	for _, u := range urls {
+		url, err := url.Parse(u)
+		if err != nil {
+			log.Fatal("Invalid URL %q: %s", url, err)
+		}
+		ep := httptransport.NewClient(
+			"POST",
+			url,
+			encodeCrateRequest,
+			decodeCrateResponse).Endpoint()
+		subscriber = append(subscriber, ep)
+	}
+	balancer := lb.NewRoundRobin(subscriber)
+	// Try each URL once.
+	retry := lb.Retry(len(urls), 10*time.Second, balancer)
+
 	ca := crateAdapter{
-		ep: ep,
+		ep: retry,
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>

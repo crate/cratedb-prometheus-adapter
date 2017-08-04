@@ -36,6 +36,18 @@
 			"revisionTime": "2017-04-20T00:59:06Z"
 		},
 		{
+			"checksumSHA1": "HqBG+bnHAuzPXFiKT1LK250ZjH8=",
+			"path": "github.com/go-kit/kit/sd",
+			"revision": "bc4df5b6d8156c977195a8b9637ecea5f1187a0d",
+			"revisionTime": "2017-04-20T00:59:06Z"
+		},
+		{
+			"checksumSHA1": "X3U86BczLFtUBqvIvO+B8/7cJ6o=",
+			"path": "github.com/go-kit/kit/sd/lb",
+			"revision": "bc4df5b6d8156c977195a8b9637ecea5f1187a0d",
+			"revisionTime": "2017-04-20T00:59:06Z"
+		},
+		{
 			"checksumSHA1": "/AkI9UMpVkgsMblaJIukZb0Wf5Q=",
 			"path": "github.com/go-kit/kit/transport/http",
 			"revision": "bc4df5b6d8156c977195a8b9637ecea5f1187a0d",
