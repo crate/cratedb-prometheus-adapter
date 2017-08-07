@@ -36,16 +36,16 @@
 			"revisionTime": "2017-04-20T00:59:06Z"
 		},
 		{
-			"checksumSHA1": "HqBG+bnHAuzPXFiKT1LK250ZjH8=",
+			"checksumSHA1": "/mGkEDiW1wRef5Ke2txDUPzJXkI=",
 			"path": "github.com/go-kit/kit/sd",
-			"revision": "bc4df5b6d8156c977195a8b9637ecea5f1187a0d",
-			"revisionTime": "2017-04-20T00:59:06Z"
+			"revision": "7c0038db5f6361f85f612e4154f61e4f6d6a83b2",
+			"revisionTime": "2017-08-07T10:16:07Z"
 		},
 		{
-			"checksumSHA1": "X3U86BczLFtUBqvIvO+B8/7cJ6o=",
+			"checksumSHA1": "u0RJd9Z/ibtniP8mlUsDG1pDusw=",
 			"path": "github.com/go-kit/kit/sd/lb",
-			"revision": "bc4df5b6d8156c977195a8b9637ecea5f1187a0d",
-			"revisionTime": "2017-04-20T00:59:06Z"
+			"revision": "7c0038db5f6361f85f612e4154f61e4f6d6a83b2",
+			"revisionTime": "2017-08-07T10:16:07Z"
 		},
 		{
 			"checksumSHA1": "/AkI9UMpVkgsMblaJIukZb0Wf5Q=",
@@ -76,6 +76,12 @@
 			"path": "github.com/golang/snappy",
 			"revision": "d9eb7a3d35ec988b8585d4a0068e462c27d28380",
 			"revisionTime": "2016-05-29T05:00:41Z"
+		},
+		{
+			"checksumSHA1": "abKzFXAn0KDr5U+JON1ZgJ2lUtU=",
+			"path": "github.com/kr/logfmt",
+			"revision": "b84e30acd515aadc4b783ad4ff83aff3299bdfe0",
+			"revisionTime": "2014-02-26T03:06:59Z"
 		},
 		{
 			"checksumSHA1": "Q2vw4HZBbnU8BLFt8VrzStwqSJg=",

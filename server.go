@@ -392,7 +392,7 @@ func main() {
 	if len(urls) == 0 {
 		log.Fatal("No URLs provided in -crate.url.")
 	}
-	subscriber := sd.FixedSubscriber{}
+	subscriber := sd.FixedEndpointer{}
 	for _, u := range urls {
 		url, err := url.Parse(u)
 		if err != nil {
