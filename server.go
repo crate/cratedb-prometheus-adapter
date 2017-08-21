@@ -92,7 +92,7 @@ var escaper = strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "'", "\\'")
 
 // Escape a labelname for use in SQL as a column name.
 func escapeLabelName(s string) string {
-	return "labels['l" + escaper.Replace(s) + "']"
+	return "labels['" + escaper.Replace(s) + "']"
 }
 
 // Escape a labelvalue for use in SQL as a string value.
@@ -172,7 +172,7 @@ func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
 				labels := value.(map[string]interface{})
 				for k, v := range labels {
 					// lfoo -> foo.
-					metric[model.LabelName(k[1:])] = model.LabelValue(v.(string))
+					metric[model.LabelName(k)] = model.LabelValue(v.(string))
 				}
 			case "timestamp":
 				t, _ = value.(json.Number).Int64()
@@ -299,7 +299,7 @@ func writesToCrateRequest(req *remote.WriteRequest) *crateRequest {
 	for _, ts := range req.Timeseries {
 		metric := make(model.Metric, len(ts.Labels))
 		for _, l := range ts.Labels {
-			metric["l"+model.LabelName(l.Name)] = model.LabelValue(l.Value)
+			metric[model.LabelName(l.Name)] = model.LabelValue(l.Value)
 		}
 
 		for _, s := range ts.Samples {

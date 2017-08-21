@@ -37,7 +37,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE (labels['ln'] = 'v') AND (labels['ln'] != 'v') AND (labels['ln'] ~ '^(?:v)$') AND (labels['ln'] !~ '^(?:v)$' OR labels['ln'] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE (labels['n'] = 'v') AND (labels['n'] != 'v') AND (labels['n'] ~ '^(?:v)$') AND (labels['n'] !~ '^(?:v)$' OR labels['n'] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -51,7 +51,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE (labels['ln\''] = 'v\'') AND (labels['ln\''] != 'v\'') AND (labels['ln\''] ~ '^(?:v\')$') AND (labels['ln\''] !~ '^(?:v\')$' OR labels['ln\''] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE (labels['n\''] = 'v\'') AND (labels['n\''] != 'v\'') AND (labels['n\''] ~ '^(?:v\')$') AND (labels['n\''] !~ '^(?:v\')$' OR labels['n\''] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -64,7 +64,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT * from metrics WHERE (labels['ln'] IS NULL) AND (labels['ln'] IS NOT NULL) AND (labels['ln'] ~ '^(?:)$' OR labels['ln'] IS NULL) AND (labels['ln'] !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT * from metrics WHERE (labels['n'] IS NULL) AND (labels['n'] IS NOT NULL) AND (labels['n'] ~ '^(?:)$' OR labels['n'] IS NULL) AND (labels['n'] !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &remote.Query{
@@ -99,12 +99,12 @@ func TestResponseToTimeseries(t *testing.T) {
 			data: &crateResponse{
 				Cols: []string{"timestamp", "valueRaw", "value", "labels", "labels_hash"},
 				Rows: [][]interface{}{
-					{intToNumber(1000), floatToNumber(1), 1, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
-					{intToNumber(2000), floatToNumber(2), 2, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
+					{intToNumber(1000), floatToNumber(1), 1, map[string]interface{}{"__name__": "metric", "job": "j"}, "XXX"},
+					{intToNumber(2000), floatToNumber(2), 2, map[string]interface{}{"__name__": "metric", "job": "j"}, "XXX"},
 					// Value is purposely wrong, so we know we're using valueRaw.
-					{intToNumber(3000), floatToNumber(3), 0, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
+					{intToNumber(3000), floatToNumber(3), 0, map[string]interface{}{"__name__": "metric", "job": "j"}, "XXX"},
 					// Test a negative, which has the most significant bit set.
-					{intToNumber(4000), floatToNumber(-1), -1, map[string]interface{}{"l__name__": "metric", "ljob": "j"}, "XXX"},
+					{intToNumber(4000), floatToNumber(-1), -1, map[string]interface{}{"__name__": "metric", "job": "j"}, "XXX"},
 				},
 			},
 			timeseries: []*remote.TimeSeries{
@@ -126,8 +126,8 @@ func TestResponseToTimeseries(t *testing.T) {
 			data: &crateResponse{
 				Cols: []string{"timestamp", "valueRaw", "value", "labels", "labels_hash"},
 				Rows: [][]interface{}{
-					{intToNumber(1000), floatToNumber(1), 1, map[string]interface{}{"l__name__": "a", "ljob": "j"}, "XXX"},
-					{intToNumber(1000), floatToNumber(2), 2, map[string]interface{}{"l__name__": "b", "ljob": "j"}, "XXX"},
+					{intToNumber(1000), floatToNumber(1), 1, map[string]interface{}{"__name__": "a", "job": "j"}, "XXX"},
+					{intToNumber(1000), floatToNumber(2), 2, map[string]interface{}{"__name__": "b", "job": "j"}, "XXX"},
 				},
 			},
 			timeseries: []*remote.TimeSeries{
@@ -182,9 +182,9 @@ func TestWritesToCrateRequest(t *testing.T) {
 			request: &crateRequest{
 				Stmt: `INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
-					{model.Metric{"l__name__": "metric", "ljob": "j"}, "990ae6389f9b0199", "1.000000", int64(4607182418800017408), int64(1000)},
-					{model.Metric{"l__name__": "metric", "ljob": "j"}, "990ae6389f9b0199", "Infinity", int64(9218868437227405312), int64(2000)},
-					{model.Metric{"l__name__": "metric", "ljob": "j"}, "990ae6389f9b0199", "-Infinity", int64(-4503599627370496), int64(3000)},
+					{model.Metric{"__name__": "metric", "job": "j"}, "686aa056b20923af", "1.000000", int64(4607182418800017408), int64(1000)},
+					{model.Metric{"__name__": "metric", "job": "j"}, "686aa056b20923af", "Infinity", int64(9218868437227405312), int64(2000)},
+					{model.Metric{"__name__": "metric", "job": "j"}, "686aa056b20923af", "-Infinity", int64(-4503599627370496), int64(3000)},
 				},
 			},
 		},
@@ -213,8 +213,8 @@ func TestWritesToCrateRequest(t *testing.T) {
 			request: &crateRequest{
 				Stmt: `INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
-					{model.Metric{"l__name__": "a", "ljob": "j"}, "b1871e5badc72354", "1.000000", int64(4607182418800017408), int64(1000)},
-					{model.Metric{"l__name__": "b", "ljob": "j", "lfoo": "bar"}, "b2812e060fed451c", "2.000000", int64(4611686018427387904), int64(1000)},
+					{model.Metric{"__name__": "a", "job": "j"}, "ac2e1accf88b4a18", "1.000000", int64(4607182418800017408), int64(1000)},
+					{model.Metric{"__name__": "b", "job": "j", "foo": "bar"}, "d9b64ab8cc80c298", "2.000000", int64(4611686018427387904), int64(1000)},
 				},
 			},
 		},
@@ -232,7 +232,7 @@ func TestWritesToCrateRequest(t *testing.T) {
 			request: &crateRequest{
 				Stmt: `INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`,
 				BulkArgs: [][]interface{}{
-					{model.Metric{"l\"'": "\"'"}, "e867c1ceab13b21f", "1.000000", int64(4607182418800017408), int64(1000)},
+					{model.Metric{"\"'": "\"'"}, "fd0b18b0901a3291", "1.000000", int64(4607182418800017408), int64(1000)},
 				},
 			},
 		},

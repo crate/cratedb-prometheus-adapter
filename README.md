@@ -4,6 +4,8 @@ This is an adapter that accepts Prometheus remote read/write requests,
 and sends them on to Crate.io. This allows using Crate as long term storage
 for Prometheus.
 
+Requires Crate 2.2.
+
 ## Building
 
 ```
