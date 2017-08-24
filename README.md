@@ -9,8 +9,8 @@ Requires Crate 2.2.
 ## Building
 
 ```
-go get github.com/XXX
-cd ${GOPATH-$HOME/go}/src/github.com/XXX
+go get github.com/crate/crate_adapter
+cd ${GOPATH-$HOME/go}/src/github.com/crate/crate_adapter
 go build
 ```
 
