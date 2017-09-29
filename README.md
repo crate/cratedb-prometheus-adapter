@@ -1,10 +1,10 @@
-# Crate.io Prometheus Adapter
+# CrateDB Prometheus Adapter
 
 This is an adapter that accepts Prometheus remote read/write requests,
-and sends them on to Crate.io. This allows using Crate as long term storage
+and sends them on to CrateDB. This allows using CrateDB as long term storage
 for Prometheus.
 
-Requires Crate 2.2.
+Requires CrateDB 2.2.
 
 ## Building
 
@@ -16,7 +16,7 @@ go build
 
 ## Usage
 
-Create the following table in your Crate database:
+Create the following table in your CrateDB database:
 
 ```
 CREATE TABLE "metrics" (
@@ -35,7 +35,7 @@ Then run the adapter:
 ./crate_adapter
 ```
 
-By default the adapter will listen on port 9268, and talk to the local Crate running on port 4200.
+By default the adapter will listen on port 9268, and talk to the local CrateDB running on port 4200.
 This is configurable via command line flags, which you can see by passing the `-h` flag.
 
 
