@@ -372,6 +372,7 @@ func encodeCrateRequest(_ context.Context, r *http.Request, request interface{})
 	}
 	log.With("json", string(jsonRequest)).Debug("Request to Crate")
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(jsonRequest))
+	r.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return nil
 }
 
