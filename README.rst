@@ -6,7 +6,7 @@ This is an adapter that accepts Prometheus remote read/write requests,
 and sends them on to CrateDB. This allows using CrateDB as long term storage
 for Prometheus.
 
-Requires CrateDB 2.2.
+Requires CrateDB 2.2.0 or greater.
 
 Building
 ========
@@ -21,6 +21,8 @@ Usage
 =====
 
 Create the following table in your CrateDB database::
+
+.. code-block:: sql
 
   CREATE TABLE "metrics" (
       "timestamp" TIMESTAMP,
@@ -45,7 +47,9 @@ This is configurable via command line flags, which you can see by passing the ``
 Prometheus Configuration
 ========================
 
-Add the following to your `prometheus.yml`::
+Add the following to your ``prometheus.yml``::
+
+.. code-block:: yaml
 
   remote_write:
      - url: http://localhost:9268/write
@@ -57,7 +61,9 @@ The adapter also exposes Prometheus metrics on ``/metrics``, and can be scraped 
 Running with systemd
 ====================
 
-Copy `<crate_adapter.service>`_ to ``/etc/systemd/system/crate_adapter.service`` and run::
+Copy `<crate_adapter.service>`_ to ``/etc/systemd/system/crate_adapter.service`` or
+just link the service file by running: ``sudo systemctl link $(pwd)/crate_adapter.service``
+and run::
 
   systemctl daemon-reload
 
