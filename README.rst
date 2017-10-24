@@ -20,7 +20,7 @@ Building
 Usage
 =====
 
-Create the following table in your CrateDB database::
+Create the following table in your CrateDB database:
 
 .. code-block:: sql
 
@@ -47,7 +47,7 @@ This is configurable via command line flags, which you can see by passing the ``
 Prometheus Configuration
 ========================
 
-Add the following to your ``prometheus.yml``::
+Add the following to your ``prometheus.yml``:
 
 .. code-block:: yaml
 
