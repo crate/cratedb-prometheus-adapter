@@ -1,0 +1,1 @@
+CRATE_ADAPTER_OPTS=-crate.url=http://server1:4200/_sql,http://server2:4200/_sql -log.level=warn
