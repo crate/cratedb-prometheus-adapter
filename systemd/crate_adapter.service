@@ -1,0 +1,18 @@
+# -*- mode: conf -*-
+
+[Unit]
+Description=Prometheus adapter to write to CrateDB
+Documentation=https://github.com/crate/crate_adapter/
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/default/crate_adapter
+User=prometheus
+ExecStart=/usr/bin/crate_adapter $CRATE_ADAPTER_OPTS
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
