@@ -408,7 +408,7 @@ func main() {
 	}
 	balancer := lb.NewRoundRobin(subscriber)
 	// Try each URL once.
-	retry := lb.Retry(len(urls), 10*time.Second, balancer)
+	retry := lb.Retry(len(urls), 1*time.Minute, balancer)
 
 	ca := crateAdapter{
 		ep: retry,
