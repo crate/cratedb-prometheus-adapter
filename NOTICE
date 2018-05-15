@@ -1,0 +1,25 @@
+CrateDB Prometheus Adapter
+Copyright 2013-2018 Crate.IO GmbH ("Crate")
+
+
+Licensed to Crate.IO GmbH (referred to in this notice as "Crate") under one or
+more contributor license agreements.
+
+Unless otherwise stated, every component of the CrateDB Prometheus Adapter is
+licensed under the Apache License, Version 2.0.
+
+Third-party components bundled with the CrateDB Prometheus Adapter are listed
+in the LICENSE file along with their respective licenses. Any additional
+mandatory notices pertaining to those dependencies will be reproduced in this
+file.
+
+Crate provides pre-built releases for convenience, also known as convenience
+releases. Building the CrateDB Prometheus Adapter from source pulls in a number
+of additional third-party dependencies. Hence, convenience releases will
+contain a mix of CrateDB Prometheus Adapter source code and third-party
+build-time dependencies not listed in the LICENSE file or in this file.
+
+Crate is committed to only using permissively licensed third-party code.
+However, for the time being, if you make use of convenience releases, it is
+your responsibility to check the licensing status of the bundled third-party
+build-time dependencies.
