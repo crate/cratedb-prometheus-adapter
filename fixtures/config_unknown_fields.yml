@@ -1,0 +1,9 @@
+crate_endpoints:
+- host: "host1"
+  port: 1
+  user: "user1"
+  password: "password1"
+  schema: "schema1"
+  max_connections: 10
+  enable_tls: false
+  unknown_fields: test
