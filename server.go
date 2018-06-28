@@ -1,15 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
-	"net/url"
 	"regexp"
 	"sort"
 	"strings"
@@ -18,19 +15,19 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/lb"
-	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/storage/remote"
+	"github.com/prometheus/prometheus/prompb"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var (
 	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
-	crateURL      = flag.String("crate.url", "http://localhost:4200/_sql", "URL to send Crate SQL to. Can list multiple URLs comma seperated.")
+	configFile    = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "crate_adapter_write_latency_seconds",
@@ -100,22 +97,12 @@ func escapeLabelValue(s string) string {
 	return "'" + escaper.Replace(s) + "'"
 }
 
-type crateRequest struct {
-	Stmt     string          `json:"stmt"`
-	BulkArgs [][]interface{} `json:"bulk_args,omitempty"`
-}
-
-type crateResponse struct {
-	Cols []string        `json:"cols,omitempty"`
-	Rows [][]interface{} `json:"rows,omitempty"`
-}
-
 // Convert a read query into a Crate SQL query.
-func queryToSQL(q *remote.Query) (string, error) {
+func queryToSQL(q *prompb.Query) (string, error) {
 	selectors := make([]string, 0, len(q.Matchers)+2)
 	for _, m := range q.Matchers {
 		switch m.Type {
-		case remote.MatchType_EQUAL:
+		case prompb.LabelMatcher_EQ:
 			if m.Value == "" {
 				// Empty labels are recorded as NULL.
 				// In PromQL, empty labels and missing labels are the same thing.
@@ -123,13 +110,13 @@ func queryToSQL(q *remote.Query) (string, error) {
 			} else {
 				selectors = append(selectors, fmt.Sprintf("(%s = %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 			}
-		case remote.MatchType_NOT_EQUAL:
+		case prompb.LabelMatcher_NEQ:
 			if m.Value == "" {
 				selectors = append(selectors, fmt.Sprintf("(%s IS NOT NULL)", escapeLabelName(m.Name)))
 			} else {
 				selectors = append(selectors, fmt.Sprintf("(%s != %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 			}
-		case remote.MatchType_REGEX_MATCH:
+		case prompb.LabelMatcher_RE:
 			re := "^(?:" + m.Value + ")$"
 			matchesEmpty, err := regexp.MatchString(re, "")
 			if err != nil {
@@ -141,7 +128,7 @@ func queryToSQL(q *remote.Query) (string, error) {
 			} else {
 				selectors = append(selectors, fmt.Sprintf("(%s ~ %s)", escapeLabelName(m.Name), escapeLabelValue(re)))
 			}
-		case remote.MatchType_REGEX_NO_MATCH:
+		case prompb.LabelMatcher_NRE:
 			re := "^(?:" + m.Value + ")$"
 			matchesEmpty, err := regexp.MatchString(re, "")
 			if err != nil {
@@ -157,44 +144,34 @@ func queryToSQL(q *remote.Query) (string, error) {
 	selectors = append(selectors, fmt.Sprintf("(timestamp <= %d)", q.EndTimestampMs))
 	selectors = append(selectors, fmt.Sprintf("(timestamp >= %d)", q.StartTimestampMs))
 
-	return fmt.Sprintf("SELECT * from metrics WHERE %s ORDER BY timestamp", strings.Join(selectors, " AND ")), nil
+	return fmt.Sprintf(`SELECT labels, labels_hash, timestamp, value, "valueRaw" FROM metrics WHERE %s ORDER BY timestamp`, strings.Join(selectors, " AND ")), nil
 }
 
-func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
-	timeseries := map[string]*remote.TimeSeries{}
-	for _, row := range data.Rows {
+func responseToTimeseries(data *crateReadResponse) []*prompb.TimeSeries {
+	timeseries := map[string]*prompb.TimeSeries{}
+	for _, row := range data.rows {
 		metric := model.Metric{}
-		var v float64
-		var t int64
-		for i, value := range row {
-			switch data.Cols[i] {
-			case "labels":
-				labels := value.(map[string]interface{})
-				for k, v := range labels {
-					// lfoo -> foo.
-					metric[model.LabelName(k)] = model.LabelValue(v.(string))
-				}
-			case "timestamp":
-				t, _ = value.(json.Number).Int64()
-			case "valueRaw":
-				val, _ := value.(json.Number).Int64()
-				v = math.Float64frombits(uint64(val))
-			}
+		for k, v := range row.labels {
+			metric[model.LabelName(k)] = model.LabelValue(v)
 		}
+
+		t := row.timestamp.UnixNano() / 1e6
+		v := math.Float64frombits(uint64(row.valueRaw))
+
 		ts, ok := timeseries[metric.String()]
 		if !ok {
-			ts = &remote.TimeSeries{}
+			ts = &prompb.TimeSeries{}
 			labelnames := make([]string, 0, len(metric))
 			for k := range metric {
 				labelnames = append(labelnames, string(k))
 			}
 			sort.Strings(labelnames) // Sort for unittests.
 			for _, k := range labelnames {
-				ts.Labels = append(ts.Labels, &remote.LabelPair{Name: string(k), Value: string(metric[model.LabelName(k)])})
+				ts.Labels = append(ts.Labels, &prompb.Label{Name: string(k), Value: string(metric[model.LabelName(k)])})
 			}
 			timeseries[metric.String()] = ts
 		}
-		ts.Samples = append(ts.Samples, &remote.Sample{Value: v, TimestampMs: t})
+		ts.Samples = append(ts.Samples, &prompb.Sample{Value: v, Timestamp: t})
 	}
 
 	names := make([]string, 0, len(timeseries))
@@ -202,7 +179,7 @@ func responseToTimeseries(data *crateResponse) []*remote.TimeSeries {
 		names = append(names, k)
 	}
 	sort.Strings(names)
-	resp := make([]*remote.TimeSeries, 0, len(timeseries))
+	resp := make([]*prompb.TimeSeries, 0, len(timeseries))
 	for _, name := range names {
 		writeSamples.Observe(float64(len(timeseries[name].Samples)))
 		resp = append(resp, timeseries[name])
@@ -214,13 +191,13 @@ type crateAdapter struct {
 	ep endpoint.Endpoint
 }
 
-func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) {
+func (ca *crateAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSeries, error) {
 	query, err := queryToSQL(q)
 	if err != nil {
 		return nil, err
 	}
 
-	request := crateRequest{Stmt: query}
+	request := &crateReadRequest{stmt: query}
 
 	timer := prometheus.NewTimer(readCrateDuration)
 	result, err := ca.ep(context.Background(), request)
@@ -229,8 +206,7 @@ func (ca *crateAdapter) runQuery(q *remote.Query) ([]*remote.TimeSeries, error) 
 		readCrateErrors.Inc()
 		return nil, err
 	}
-	timeseries := responseToTimeseries(result.(*crateResponse))
-	return timeseries, nil
+	return responseToTimeseries(result.(*crateReadResponse)), nil
 }
 
 func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
@@ -251,7 +227,7 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req remote.ReadRequest
+	var req prompb.ReadRequest
 	if err := proto.Unmarshal(reqBuf, &req); err != nil {
 		log.With("err", err).Error("Failed to unmarshal body.")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -270,8 +246,8 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	resp := remote.ReadResponse{
-		Results: []*remote.QueryResult{
+	resp := prompb.ReadResponse{
+		Results: []*prompb.QueryResult{
 			{Timeseries: result},
 		},
 	}
@@ -290,37 +266,28 @@ func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func writesToCrateRequest(req *remote.WriteRequest) *crateRequest {
-	request := &crateRequest{
-		BulkArgs: make([][]interface{}, 0, len(req.Timeseries)),
+func writesToCrateRequest(req *prompb.WriteRequest) *crateWriteRequest {
+	request := &crateWriteRequest{
+		rows: make([]*crateRow, 0, len(req.Timeseries)),
 	}
-	request.Stmt = fmt.Sprintf(`INSERT INTO metrics ("labels", "labels_hash", "value", "valueRaw", "timestamp") VALUES (?, ?, ?, ?, ?)`)
 
 	for _, ts := range req.Timeseries {
 		metric := make(model.Metric, len(ts.Labels))
 		for _, l := range ts.Labels {
 			metric[model.LabelName(l.Name)] = model.LabelValue(l.Value)
 		}
+		fp := metric.Fingerprint().String()
 
 		for _, s := range ts.Samples {
-			args := make([]interface{}, 0, 5)
-			args = append(args, metric)
-			args = append(args, metric.Fingerprint().String())
-			// Convert to string to handle NaN/Inf/-Inf.
-			switch {
-			case math.IsInf(s.Value, 1):
-				args = append(args, "Infinity")
-			case math.IsInf(s.Value, -1):
-				args = append(args, "-Infinity")
-			default:
-				args = append(args, fmt.Sprintf("%f", s.Value))
-			}
-			// Crate.io can't handle full NaN values as required by Prometheus 2.0,
-			// so store the raw bits as an int64.
-			args = append(args, int64(math.Float64bits(s.Value)))
-			args = append(args, s.TimestampMs)
-
-			request.BulkArgs = append(request.BulkArgs, args)
+			request.rows = append(request.rows, &crateRow{
+				labels:     metric,
+				labelsHash: fp,
+				timestamp:  time.Unix(0, s.Timestamp*1e6).UTC(),
+				value:      s.Value,
+				// Crate.io can't handle full NaN values as required by Prometheus 2.0,
+				// so store the raw bits as an int64.
+				valueRaw: int64(math.Float64bits(s.Value)),
+			})
 		}
 		writeSamples.Observe(float64(len(ts.Samples)))
 	}
@@ -345,7 +312,7 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req remote.WriteRequest
+	var req prompb.WriteRequest
 	if err := proto.Unmarshal(reqBuf, &req); err != nil {
 		log.With("err", err).Error("Failed to unmarshal body")
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -365,50 +332,66 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func encodeCrateRequest(_ context.Context, r *http.Request, request interface{}) error {
-	jsonRequest, err := json.Marshal(request)
-	if err != nil {
-		return err
-	}
-	log.With("json", string(jsonRequest)).Debug("Request to Crate")
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(jsonRequest))
-	r.Header.Set("Content-Type", "application/json; charset=utf-8")
-	return nil
+type endpointConfig struct {
+	Host             string `yaml:"host"`
+	Port             uint16 `yaml:"port"`
+	User             string `yaml:"user"`
+	Password         string `yaml:"password"`
+	Schema           string `yaml:"schema"`
+	EnableTLS        bool   `yaml:"enable_tls"`
+	AllowInsecureTLS bool   `yaml:"allow_insecure_tls"`
+	MaxConnections   int    `yaml:"max_connections"`
 }
 
-func decodeCrateResponse(_ context.Context, r *http.Response) (interface{}, error) {
-	var response crateResponse
-	decoder := json.NewDecoder(r.Body)
-	decoder.UseNumber()
-	if err := decoder.Decode(&response); err != nil {
-		return nil, err
+type config struct {
+	Endpoints []endpointConfig `yaml:"crate_endpoints"`
+}
+
+func loadConfig(filename string) (*config, error) {
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error reading configuration file: %v", err)
 	}
-	return &response, nil
+	conf := &config{}
+	if err = yaml.UnmarshalStrict(content, conf); err != nil {
+		return nil, fmt.Errorf("error unmarshaling YAML: %v", err)
+	}
+
+	if len(conf.Endpoints) == 0 {
+		return nil, fmt.Errorf("no CrateDB endpoints provided in configuration file")
+	}
+	for i := range conf.Endpoints {
+		if conf.Endpoints[i].Host == "" {
+			conf.Endpoints[i].Host = "localhost"
+		}
+		if conf.Endpoints[i].Port == 0 {
+			conf.Endpoints[i].Port = 5432
+		}
+		if conf.Endpoints[i].User == "" {
+			conf.Endpoints[i].User = "crate"
+		}
+		if conf.Endpoints[i].MaxConnections == 0 {
+			conf.Endpoints[i].MaxConnections = 5
+		}
+	}
+	return conf, nil
 }
 
 func main() {
 	flag.Parse()
 
-	urls := strings.Split(*crateURL, ",")
-	if len(urls) == 0 {
-		log.Fatal("No URLs provided in -crate.url.")
+	conf, err := loadConfig(*configFile)
+	if err != nil {
+		log.Fatalf("Error loading configuration file %q: %v", *configFile, err)
 	}
+
 	subscriber := sd.FixedEndpointer{}
-	for _, u := range urls {
-		url, err := url.Parse(u)
-		if err != nil {
-			log.Fatal("Invalid URL %q: %s", url, err)
-		}
-		ep := httptransport.NewClient(
-			"POST",
-			url,
-			encodeCrateRequest,
-			decodeCrateResponse).Endpoint()
-		subscriber = append(subscriber, ep)
+	for _, epConf := range conf.Endpoints {
+		subscriber = append(subscriber, newCrateEndpoint(&epConf).endpoint())
 	}
 	balancer := lb.NewRoundRobin(subscriber)
-	// Try each URL once.
-	retry := lb.Retry(len(urls), 1*time.Minute, balancer)
+	// Try each endpoint once.
+	retry := lb.Retry(len(conf.Endpoints), 1*time.Minute, balancer)
 
 	ca := crateAdapter{
 		ep: retry,

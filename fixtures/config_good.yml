@@ -1,0 +1,19 @@
+crate_endpoints:
+- host: "host1"
+  port: 1
+  user: "user1"
+  password: "password1"
+  schema: "schema1"
+  max_connections: 10
+  enable_tls: false
+- host: "host2"
+  port: 2
+  user: "user2"
+  password: "password2"
+  schema: "schema2"
+  max_connections: 20
+  enable_tls: true
+  allow_insecure_tls: false
+# Entry to test default values.
+- enable_tls: true
+  allow_insecure_tls: true
