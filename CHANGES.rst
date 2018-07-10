@@ -5,6 +5,9 @@ CHANGES for Prometheus CrateDB Adapter
 Unreleased
 ==========
 
+2018-07-10 0.2.0
+================
+
 - Use Postgres wire protocol (pgx client library) to connect to CrateDB:
 
   - This change requires CrateDB 3.1.0 or newer!
