@@ -32,9 +32,6 @@ function exit_on_error() {
    exit 1
 }
 
-WORKING_DIR=`readlink -f $(dirname $0)/..`
-
-
 # check if Go is installed
 which go > /dev/null
 if [ $? -gt 1 ]
@@ -66,19 +63,26 @@ then
 fi
 
 # build project locally
-go build $WORKING_DIR
+go build -v
+
+if [ $? -gt 1 ]
+then
+  exit_on_error "Could not build binary."
+fi
 
 # check if tag to create has already been created
-VERSION=`crate_adapter -version`
+VERSION=`./crate_adapter -version`
 rm crate_adapter
 EXISTS=`git tag | grep $VERSION`
 if [ "$VERSION" == "$EXISTS" ]
 then
    exit_on_error "Revision $VERSION already tagged"
+else
+  p_ok "Using version $VERSION"
 fi
 
 # check if VERSION is in head of CHANGES.txt
-REV_NOTE=`grep "[0-9/]\{10\} $VERSION" CHANGES.rst`
+REV_NOTE=`grep "[0-9\-]\{10\} $VERSION" CHANGES.rst`
 if [ -z "$REV_NOTE" ]
 then
     exit_on_error "No notes for revision $VERSION found in CHANGES.rst"
