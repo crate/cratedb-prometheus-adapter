@@ -6,7 +6,7 @@ This is an adapter that accepts Prometheus remote read/write requests,
 and sends them on to CrateDB. This allows using CrateDB as long term storage
 for Prometheus.
 
-Requires CrateDB 3.1.0 or greater.
+Requires CrateDB **3.1.0** or greater.
 
 Building
 ========
@@ -86,14 +86,14 @@ Running with systemd
 
 Copy `<config.yml>`_ to ``/etc/crate_adapter/config.yml`` and adjust as needed.
 
-Copy `<crate_adapter.service>`_ to ``/etc/systemd/system/crate_adapter.service`` or
+Copy `<systemd/crate_adapter.service>`_ to ``/etc/systemd/system/crate_adapter.service`` or
 just link the service file by running: ``sudo systemctl link $(pwd)/crate_adapter.service``
 and run::
 
   systemctl daemon-reload
 
 Change flag-based configuration by changing the settings in ``/etc/default/crate_adapter``
-based on the `<crate_adapter.default>`_ template. After that you can::
+based on the `<systemd/crate_adapter.default>`_ template. After that you can::
 
   systemctl start crate_adapter
   systemctl enable crate_adapter
