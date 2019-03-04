@@ -184,7 +184,7 @@ func responseToTimeseries(data *crateReadResponse) []*prompb.TimeSeries {
 	sort.Strings(names)
 	resp := make([]*prompb.TimeSeries, 0, len(timeseries))
 	for _, name := range names {
-		writeSamples.Observe(float64(len(timeseries[name].Samples)))
+		readSamples.Observe(float64(len(timeseries[name].Samples)))
 		resp = append(resp, timeseries[name])
 	}
 	return resp
