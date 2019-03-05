@@ -120,7 +120,7 @@ func queryToSQL(q *prompb.Query) (string, error) {
 				selectors = append(selectors, fmt.Sprintf("(%s != %s)", escapeLabelName(m.Name), escapeLabelValue(m.Value)))
 			}
 		case prompb.LabelMatcher_RE:
-			re := "^(?:" + m.Value + ")$"
+			re := "(" + m.Value + ")"
 			matchesEmpty, err := regexp.MatchString(re, "")
 			if err != nil {
 				return "", err
@@ -132,7 +132,7 @@ func queryToSQL(q *prompb.Query) (string, error) {
 				selectors = append(selectors, fmt.Sprintf("(%s ~ %s)", escapeLabelName(m.Name), escapeLabelValue(re)))
 			}
 		case prompb.LabelMatcher_NRE:
-			re := "^(?:" + m.Value + ")$"
+			re := "(" + m.Value + ")"
 			matchesEmpty, err := regexp.MatchString(re, "")
 			if err != nil {
 				return "", err
