@@ -5,6 +5,16 @@ CHANGES for Prometheus CrateDB Adapter
 Unreleased
 ==========
 
+2019-03-06 0.2.1
+================
+
+- Fixed the translation of prometheus queries using regular expressions
+  (``metric_name{job=~"something"}``) , so that the generated SQL queries match
+  the proper records in CrateDB.
+
+- Fixed an issue that caused reads to increment the write metrics instead of
+  the read metrics.
+
 2018-07-10 0.2.0
 ================
 
