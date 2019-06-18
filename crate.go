@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-const crateWriteStatement = `INSERT INTO metrics ("labels", "labels_hash", "timestamp", "value", "valueRaw") VALUES ($1, $2, $3, $4, $5)`
+const crateWriteStatement = `INSERT INTO metrics ("labels", "labels_hash", "timestamp", "value", "value_raw") VALUES ($1, $2, $3, $4, $5)`
 
 type crateRow struct {
 	labels     model.Metric

@@ -147,7 +147,7 @@ func queryToSQL(q *prompb.Query) (string, error) {
 	selectors = append(selectors, fmt.Sprintf("(timestamp <= %d)", q.EndTimestampMs))
 	selectors = append(selectors, fmt.Sprintf("(timestamp >= %d)", q.StartTimestampMs))
 
-	return fmt.Sprintf(`SELECT labels, labels_hash, timestamp, value, "valueRaw" FROM metrics WHERE %s ORDER BY timestamp`, strings.Join(selectors, " AND ")), nil
+	return fmt.Sprintf(`SELECT labels, labels_hash, timestamp, value, "value_raw" FROM metrics WHERE %s ORDER BY timestamp`, strings.Join(selectors, " AND ")), nil
 }
 
 func responseToTimeseries(data *crateReadResponse) []*prompb.TimeSeries {

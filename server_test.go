@@ -25,7 +25,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT labels, labels_hash, timestamp, value, "valueRaw" FROM metrics WHERE (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT labels, labels_hash, timestamp, value, "value_raw" FROM metrics WHERE (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &prompb.Query{
@@ -38,7 +38,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT labels, labels_hash, timestamp, value, "valueRaw" FROM metrics WHERE (labels['n'] = 'v') AND (labels['n'] != 'v') AND (labels['n'] ~ '^(?:v)$') AND (labels['n'] !~ '^(?:v)$' OR labels['n'] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT labels, labels_hash, timestamp, value, "value_raw" FROM metrics WHERE (labels['n'] = 'v') AND (labels['n'] != 'v') AND (labels['n'] ~ '^(?:v)$') AND (labels['n'] !~ '^(?:v)$' OR labels['n'] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &prompb.Query{
@@ -52,7 +52,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT labels, labels_hash, timestamp, value, "valueRaw" FROM metrics WHERE (labels['n\''] = 'v\'') AND (labels['n\''] != 'v\'') AND (labels['n\''] ~ '^(?:v\')$') AND (labels['n\''] !~ '^(?:v\')$' OR labels['n\''] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT labels, labels_hash, timestamp, value, "value_raw" FROM metrics WHERE (labels['n\''] = 'v\'') AND (labels['n\''] != 'v\'') AND (labels['n\''] ~ '^(?:v\')$') AND (labels['n\''] !~ '^(?:v\')$' OR labels['n\''] IS NULL) AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &prompb.Query{
@@ -65,7 +65,7 @@ func TestQueryToSQL(t *testing.T) {
 				StartTimestampMs: 1000,
 				EndTimestampMs:   2000,
 			},
-			sql: `SELECT labels, labels_hash, timestamp, value, "valueRaw" FROM metrics WHERE (labels['n'] IS NULL) AND (labels['n'] IS NOT NULL) AND (labels['n'] ~ '^(?:)$' OR labels['n'] IS NULL) AND (labels['n'] !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
+			sql: `SELECT labels, labels_hash, timestamp, value, "value_raw" FROM metrics WHERE (labels['n'] IS NULL) AND (labels['n'] IS NOT NULL) AND (labels['n'] ~ '^(?:)$' OR labels['n'] IS NULL) AND (labels['n'] !~ '^(?:)$') AND (timestamp <= 2000) AND (timestamp >= 1000) ORDER BY timestamp`,
 		},
 		{
 			query: &prompb.Query{
