@@ -329,7 +329,7 @@ func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	writeTimer.ObserveDuration()
 	if err != nil {
 		writeCrateErrors.Inc()
-		log.With("err", err).Error("Failed to POST inserts to Crate.")
+		log.With("err", err).Error("Failed to write data to Crate.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
