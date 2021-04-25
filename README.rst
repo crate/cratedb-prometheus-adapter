@@ -8,14 +8,29 @@ for Prometheus.
 
 Requires CrateDB **3.1.0** or greater.
 
-Building
-========
+Building from source
+====================
 
-::
+To build the CrateDB Prometheus Adapter from source, you need to have a working
+Go environment with **Golang version 1.16** installed.
 
-  go get github.com/crate/crate_adapter
-  cd ${GOPATH-$HOME/go}/src/github.com/crate/crate_adapter
-  go build
+Use the ``go`` tool to download and install the ``crate_adapter`` executable
+into your ``GOPATH``:
+
+.. code-block:: console
+
+   $ go get github.com/crate/crate_adapter
+   $ cd $GOPATH/src/github.com/crate/crate_adapter
+
+Alternatively, you can clone the repository and compile the binary:
+
+.. code-block:: console
+
+   $ mkdir -pv ${GOPATH}/src/github.com/crate
+   $ cd ${GOPATH}/src/github.com/crate
+   $ git clone https://github.com/crate/crate_adapter.git
+   $ cd crate_adapter
+   $ go build
 
 Usage
 =====

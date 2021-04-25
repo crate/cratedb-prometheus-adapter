@@ -1,4 +1,4 @@
-FROM golang:1.9.2 as builder
+FROM golang:1.16 as builder
 WORKDIR /go/src/github.com/crate/crate_adapter
 COPY . /go/src/github.com/crate/crate_adapter/
 RUN CGO_ENABLED=0 GOOS=linux go build
