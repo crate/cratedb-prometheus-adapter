@@ -383,7 +383,7 @@ func loadConfig(filename string) (*config, error) {
 func main() {
 	flag.Parse()
 
-	if *print_version == true {
+	if *print_version {
 		fmt.Println(version)
 		return
 	}
@@ -406,9 +406,9 @@ func main() {
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
-    <head><title>Crate.io Prometheus Adapter</title></head>
+    <head><title>CrateDB Prometheus Adapter</title></head>
     <body>
-    <h1>Crate.io Prometheus Adapter</h1>
+    <h1>CrateDB Prometheus Adapter</h1>
     </body>
     </html>`))
 	})

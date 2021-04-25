@@ -5,14 +5,33 @@ Developer Guide
 Setup
 =====
 
-To start things off, clone the repository::
+To start things off, clone the repository and change into the newly checked out
+directory:
 
-    $ git clone https://github.com/crate/crate_adapter
-    $ cd crate_adapter
+.. code-block:: console
 
-Then, run::
+   $ mkdir -pv ${GOPATH}/src/github.com/crate
+   $ cd ${GOPATH}/src/github.com/crate
+   $ git clone https://github.com/crate/crate_adapter.git
+   $ cd crate_adapter
 
-    $ go build
+To simply run the adapter, invoke:
+
+.. code-block:: console
+
+   $ go run server.go crate.go
+
+To build the ``crate_adapter`` executable, run:
+
+.. code-block:: console
+
+   $ go build
+
+To run the test suite, execute:
+
+.. code-block:: console
+
+   $ go test
 
 Preparing a Release
 ===================

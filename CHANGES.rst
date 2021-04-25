@@ -5,6 +5,9 @@ CHANGES for Prometheus CrateDB Adapter
 Unreleased
 ==========
 
+- Updated project to make use of `Go modules <https://golang.org/ref/mod>`_
+  instead of Govendor.
+
 2019-03-06 0.2.1
 ================
 
