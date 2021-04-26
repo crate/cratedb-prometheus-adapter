@@ -76,8 +76,8 @@ load-balance between them. The options (for one example endpoint) are as below:
   - host: "localhost"         # Host to connect to (default: "localhost").
     port: 5432                # Port to connect to (default: 5432).
     user: "crate"             # Username to use (default: "crate")
-    password: "mypass"        # Password to use (default: "").
-    schema: "prometheus"      # Schema to use (default: "").
+    password: ""              # Password to use (default: "").
+    schema: ""                # Schema to use (default: "").
     max_connections: 5        # The maximum number of concurrent connections (default: 5).
     enable_tls: false         # Whether to connect using TLS (default: false).
     allow_insecure_tls: false # Whether to allow insecure / invalid TLS certificates (default: false).
