@@ -96,6 +96,35 @@ Add the following to your ``prometheus.yml``:
 
 The adapter also exposes Prometheus metrics on ``/metrics``, and can be scraped in the usual fashion.
 
+Running with Docker
+===================
+
+The project contains a ``Dockerfile`` which can be used to build a Docker
+image.
+
+.. code-block:: console
+
+   $ docker build --rm --tag crate/crate-adapter .
+
+When running the adapter inside Docker, you need to make sure that the running
+container has access to the CrateDB instance(s) which it should write to / read
+from.
+
+To expose the ``/read``, ``/write`` and ``/metrics`` endpoints, the port
+``9268`` must be published.
+
+.. code-block:: console
+
+   $ docker run --rm -ti -p 9268:9268 crate/crate-adapter
+
+Since the default configuration would use ``localhost`` as CrateDB endpoint, a
+``config.yml`` with the correct configuration needs to be mounted on
+``/etc/crate_adapter/config.yml``.
+
+.. code-block:: console
+
+   $ docker run --rm -ti -p 9268:9268 -v $(pwd)/config.yml:/etc/crate_adapter/config.yaml crate/crate-adapter
+
 Running with systemd
 ====================
 

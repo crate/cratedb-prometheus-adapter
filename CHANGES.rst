@@ -5,6 +5,9 @@ CHANGES for Prometheus CrateDB Adapter
 Unreleased
 ==========
 
+- Provide a default ``config.yml`` in the Docker image, which can be replaced
+  by mounting a file on ``/etc/crate_adapter/config.yml``.
+
 - Updated project to make use of `Go modules <https://golang.org/ref/mod>`_
   instead of Govendor.
 
