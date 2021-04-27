@@ -350,6 +350,14 @@ type config struct {
 	Endpoints []endpointConfig `yaml:"crate_endpoints"`
 }
 
+func (c *config) toString() string {
+	var ep []string
+	for _, e := range c.Endpoints {
+		ep = append(ep, fmt.Sprintf("%s@%s:%d/%s", e.User, e.Host, e.Port, e.Schema))
+	}
+	return strings.Join(ep, ",")
+}
+
 func loadConfig(filename string) (*config, error) {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -416,6 +424,7 @@ func main() {
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
 	http.Handle("/metrics", promhttp.Handler())
-	log.With("address", *listenAddress).Info("Listening")
+	log.With("address", *listenAddress).Info("Listening ...")
+	log.With("endpoints", conf.toString()).Info("Connecting ...")
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 }
