@@ -30,7 +30,7 @@ const version = "0.3.0-dev"
 var (
 	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
 	configFile    = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
-	print_version = flag.Bool("version", false, "Print version information.")
+	printVersion  = flag.Bool("version", false, "Print version information.")
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "crate_adapter_write_latency_seconds",
@@ -383,7 +383,7 @@ func loadConfig(filename string) (*config, error) {
 func main() {
 	flag.Parse()
 
-	if *print_version {
+	if *printVersion {
 		fmt.Println(version)
 		return
 	}
