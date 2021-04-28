@@ -8,6 +8,9 @@ This is an adapter that accepts Prometheus remote read/write requests,
 and sends them to CrateDB. This allows using CrateDB as long term storage
 for Prometheus.
 
+Along the lines, the program also exports metrics about itself, using the
+``cratedb_prometheus_adapter_`` prefix.
+
 Requires CrateDB **3.1.0** or greater.
 
 Building from source
@@ -16,13 +19,13 @@ Building from source
 To build the CrateDB Prometheus Adapter from source, you need to have a working
 Go environment with **Golang version 1.16** installed.
 
-Use the ``go`` tool to download and install the ``crate_adapter`` executable
+Use the ``go`` tool to download and install the ``cratedb-prometheus-adapter`` executable
 into your ``GOPATH``:
 
 .. code-block:: console
 
-   $ go get github.com/crate/crate_adapter
-   $ cd $GOPATH/src/github.com/crate/crate_adapter
+   $ go get github.com/crate/cratedb-prometheus-adapter
+   $ cd $GOPATH/src/github.com/crate/cratedb-prometheus-adapter
 
 Alternatively, you can clone the repository and compile the binary:
 
@@ -30,8 +33,8 @@ Alternatively, you can clone the repository and compile the binary:
 
    $ mkdir -pv ${GOPATH}/src/github.com/crate
    $ cd ${GOPATH}/src/github.com/crate
-   $ git clone https://github.com/crate/crate_adapter.git
-   $ cd crate_adapter
+   $ git clone https://github.com/crate/cratedb-prometheus-adapter.git
+   $ cd cratedb-prometheus-adapter
    $ go build
 
 Usage
@@ -56,7 +59,7 @@ and create hourly, weekly,... partitions.
 
 Then run the adapter::
 
-  ./crate_adapter
+  ./cratedb-prometheus-adapter
 
 By default the adapter will listen on port ``9268``.
 This and more is configurable via command line flags, which you can see by passing the ``-h`` flag.
@@ -106,7 +109,7 @@ image.
 
 .. code-block:: console
 
-   $ docker build --rm --tag crate/crate-adapter .
+   $ docker build --rm --tag crate/cratedb-prometheus-adapter .
 
 When running the adapter inside Docker, you need to make sure that the running
 container has access to the CrateDB instance(s) which it should write to / read
@@ -117,41 +120,41 @@ To expose the ``/read``, ``/write`` and ``/metrics`` endpoints, the port
 
 .. code-block:: console
 
-   $ docker run --rm -ti -p 9268:9268 crate/crate-adapter
+   $ docker run --rm -ti -p 9268:9268 crate/cratedb-prometheus-adapter
 
 Since the default configuration would use ``localhost`` as CrateDB endpoint, a
 ``config.yml`` with the correct configuration needs to be mounted on
-``/etc/crate_adapter/config.yml``.
+``/etc/cratedb-prometheus-adapter/config.yml``.
 
 .. code-block:: console
 
-   $ docker run --rm -ti -p 9268:9268 -v $(pwd)/config.yml:/etc/crate_adapter/config.yaml crate/crate-adapter
+   $ docker run --rm -ti -p 9268:9268 -v $(pwd)/config.yml:/etc/cratedb-prometheus-adapter/config.yaml crate/cratedb-prometheus-adapter
 
 Running with systemd
 ====================
 
-Copy `<config.yml>`_ to ``/etc/crate_adapter/config.yml`` and adjust as needed.
+Copy `<config.yml>`_ to ``/etc/cratedb-prometheus-adapter/config.yml`` and adjust as needed.
 
-Copy `<systemd/crate_adapter.service>`_ to ``/etc/systemd/system/crate_adapter.service`` or
-just link the service file by running: ``sudo systemctl link $(pwd)/crate_adapter.service``
+Copy `<systemd/cratedb-prometheus-adapter.service>`_ to ``/etc/systemd/system/cratedb-prometheus-adapter.service`` or
+just link the service file by running: ``sudo systemctl link $(pwd)/cratedb-prometheus-adapter.service``
 and run::
 
   systemctl daemon-reload
 
-Change flag-based configuration by changing the settings in ``/etc/default/crate_adapter``
-based on the `<systemd/crate_adapter.default>`_ template. After that you can::
+Change flag-based configuration by changing the settings in ``/etc/default/cratedb-prometheus-adapter``
+based on the `<systemd/cratedb-prometheus-adapter.default>`_ template. After that you can::
 
-  systemctl start crate_adapter
-  systemctl enable crate_adapter
+  systemctl start cratedb-prometheus-adapter
+  systemctl enable cratedb-prometheus-adapter
 
 
-.. |version| image:: https://img.shields.io/github/tag/crate/crate_adapter.svg
+.. |version| image:: https://img.shields.io/github/tag/crate/cratedb-prometheus-adapter.svg
     :alt: Version
-    :target: https://github.com/crate/crate_adapter
+    :target: https://github.com/crate/cratedb-prometheus-adapter
 
-.. |ci-tests| image:: https://github.com/crate/crate_adapter/workflows/Tests/badge.svg
+.. |ci-tests| image:: https://github.com/crate/cratedb-prometheus-adapter/workflows/Tests/badge.svg
     :alt: CI status
-    :target: https://github.com/crate/crate_adapter/actions?workflow=Tests
+    :target: https://github.com/crate/cratedb-prometheus-adapter/actions?workflow=Tests
 
 .. |license| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :alt: License: Apache 2.0

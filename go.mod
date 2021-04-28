@@ -1,4 +1,4 @@
-module github.com/crate/crate_adapter
+module github.com/crate/cratedb-prometheus-adapter
 
 go 1.16
 

@@ -6,10 +6,18 @@ Unreleased
 ==========
 
 - Provide a default ``config.yml`` in the Docker image, which can be replaced
-  by mounting a file on ``/etc/crate_adapter/config.yml``.
+  by mounting a file on ``/etc/cratedb-prometheus-adapter/config.yml``.
 
 - Updated project to make use of `Go modules <https://golang.org/ref/mod>`_
   instead of Govendor.
+
+- Renamed the program to ``cratedb-prometheus-adapter``.
+
+- Renamed the exported metric prefix to ``cratedb_prometheus_adapter_``. It is
+  now, for example, ``cratedb_prometheus_adapter_write_latency_seconds``.
+  Attention: This is a breaking change with respect to your exported metric
+  names. In order to keep the former name, use
+  ``./cratedb-prometheus-adapter -metrics.export.prefix=crate_adapter_``.
 
 2019-03-06 0.2.1
 ================

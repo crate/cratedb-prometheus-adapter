@@ -12,8 +12,8 @@ directory:
 
    $ mkdir -pv ${GOPATH}/src/github.com/crate
    $ cd ${GOPATH}/src/github.com/crate
-   $ git clone https://github.com/crate/crate_adapter.git
-   $ cd crate_adapter
+   $ git clone https://github.com/crate/cratedb-prometheus-adapter.git
+   $ cd cratedb-prometheus-adapter
 
 To simply run the adapter, invoke:
 
@@ -21,7 +21,7 @@ To simply run the adapter, invoke:
 
    $ go run server.go crate.go
 
-To build the ``crate_adapter`` executable, run:
+To build the ``cratedb-prometheus-adapter`` executable, run:
 
 .. code-block:: console
 
@@ -56,7 +56,7 @@ On the release branch:
 
 - Create a tag by running ``./devtools/create_tag.sh``
 
-On master:
+On branch "main":
 
 - Update the release notes to reflect the release
 
