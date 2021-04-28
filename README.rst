@@ -2,8 +2,10 @@
 CrateDB Prometheus Adapter
 ==========================
 
+|version| |ci-tests| |license|
+
 This is an adapter that accepts Prometheus remote read/write requests,
-and sends them on to CrateDB. This allows using CrateDB as long term storage
+and sends them to CrateDB. This allows using CrateDB as long term storage
 for Prometheus.
 
 Requires CrateDB **3.1.0** or greater.
@@ -141,3 +143,16 @@ based on the `<systemd/crate_adapter.default>`_ template. After that you can::
 
   systemctl start crate_adapter
   systemctl enable crate_adapter
+
+
+.. |version| image:: https://img.shields.io/github/tag/crate/crate_adapter.svg
+    :alt: Version
+    :target: https://github.com/crate/crate_adapter
+
+.. |ci-tests| image:: https://github.com/crate/crate_adapter/workflows/Tests/badge.svg
+    :alt: CI status
+    :target: https://github.com/crate/crate_adapter/actions?workflow=Tests
+
+.. |license| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+    :alt: License: Apache 2.0
+    :target: https://opensource.org/licenses/Apache-2.0
