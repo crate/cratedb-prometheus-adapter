@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"math"
 	"path/filepath"
 	"reflect"
@@ -331,4 +333,17 @@ func TestLoadConfig(t *testing.T) {
 			t.Errorf("%q: unexpected config contents;\n\nwant:\n\n%v\n\ngot:\n\n%v", test.file, test.config, conf)
 		}
 	}
+}
+
+func TestExportedMetrics(t *testing.T) {
+
+	metrics, _ := prometheus.DefaultGatherer.Gather()
+	for _, metric := range metrics {
+		name := metric.GetName()
+		if !strings.HasPrefix(name, "cratedb_prometheus_adapter_") && !strings.HasPrefix(name, "go_") {
+			message := fmt.Sprintf("Exported metrics prefix does not match expectation for '%s'", name)
+			t.Fatal(message)
+		}
+	}
+
 }

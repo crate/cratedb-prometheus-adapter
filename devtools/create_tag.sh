@@ -53,7 +53,7 @@ git fetch origin > /dev/null
 BRANCH=`git branch | grep "^*" | cut -d " " -f 2`
 p_ok "Current branch is $BRANCH"
 
-# check if master == origin/master
+# check if main == origin/main
 LOCAL_COMMIT=`git show --format="%H" $BRANCH`
 ORIGIN_COMMIT=`git show --format="%H" origin/$BRANCH`
 
@@ -71,8 +71,8 @@ then
 fi
 
 # check if tag to create has already been created
-VERSION=`./crate_adapter -version`
-rm crate_adapter
+VERSION=`./cratedb-prometheus-adapter -version`
+rm cratedb-prometheus-adapter
 EXISTS=`git tag | grep $VERSION`
 if [ "$VERSION" == "$EXISTS" ]
 then

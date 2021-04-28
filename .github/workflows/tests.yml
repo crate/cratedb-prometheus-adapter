@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   workflow_dispatch:
 
 
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Acquire sources
-        uses: actions/checkout@master
+        uses: actions/checkout@main
 
       - name: Install Go
         uses: actions/setup-go@v2

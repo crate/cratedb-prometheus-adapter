@@ -30,46 +30,47 @@ const version = "0.3.0-dev"
 var (
 	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
 	configFile    = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
+	metricsExportPrefix = flag.String("metrics.export.prefix", "cratedb_prometheus_adapter_", "Prefix for exported CrateDB metrics.")
 	printVersion  = flag.Bool("version", false, "Print version information.")
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "crate_adapter_write_latency_seconds",
+		Name: fmt.Sprintf( "%swrite_latency_seconds", *metricsExportPrefix),
 		Help: "How long it took us to respond to write requests.",
 	})
 	writeErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "crate_adapter_write_failed_total",
+		Name: fmt.Sprintf( "%swrite_failed_total", *metricsExportPrefix),
 		Help: "How many write request we returned errors for.",
 	})
 	writeSamples = prometheus.NewSummary(prometheus.SummaryOpts{
-		Name: "crate_adapter_write_timeseries_samples",
+		Name: fmt.Sprintf( "%swrite_timeseries_samples", *metricsExportPrefix),
 		Help: "How many samples each written timeseries has.",
 	})
 	writeCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "crate_adapter_write_crate_latency_seconds",
+		Name: fmt.Sprintf( "%swrite_crate_latency_seconds", *metricsExportPrefix),
 		Help: "Latency for inserts to Crate.",
 	})
 	writeCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "crate_adapter_write_crate_failed_total",
+		Name: fmt.Sprintf( "%swrite_crate_failed_total", *metricsExportPrefix),
 		Help: "How many inserts to Crate failed.",
 	})
 	readDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "crate_adapter_read_latency_seconds",
+		Name: fmt.Sprintf( "%sread_latency_seconds", *metricsExportPrefix),
 		Help: "How long it took us to respond to read requests.",
 	})
 	readErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "crate_adapter_read_failed_total",
+		Name: fmt.Sprintf( "%sread_failed_total", *metricsExportPrefix),
 		Help: "How many read requests we returned errors for.",
 	})
 	readCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "crate_adapter_read_crate_latency_seconds",
+		Name: fmt.Sprintf( "%sread_crate_latency_seconds", *metricsExportPrefix),
 		Help: "Latency for selects from Crate.",
 	})
 	readCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "crate_adapter_read_crate_failed_total",
+		Name: fmt.Sprintf( "%sread_crate_failed_total", *metricsExportPrefix),
 		Help: "How many selects from Crate failed.",
 	})
 	readSamples = prometheus.NewSummary(prometheus.SummaryOpts{
-		Name: "crate_adapter_read_timeseries_samples",
+		Name: fmt.Sprintf( "%sread_timeseries_samples", *metricsExportPrefix),
 		Help: "How many samples each returned timeseries has.",
 	})
 )
@@ -190,11 +191,11 @@ func responseToTimeseries(data *crateReadResponse) []*prompb.TimeSeries {
 	return resp
 }
 
-type crateAdapter struct {
+type crateDbPrometheusAdapter struct {
 	ep endpoint.Endpoint
 }
 
-func (ca *crateAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSeries, error) {
+func (ca *crateDbPrometheusAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSeries, error) {
 	query, err := queryToSQL(q)
 	if err != nil {
 		return nil, err
@@ -212,7 +213,7 @@ func (ca *crateAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSeries, error) 
 	return responseToTimeseries(result.(*crateReadResponse)), nil
 }
 
-func (ca *crateAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
+func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Request) {
 	timer := prometheus.NewTimer(readDuration)
 	defer timer.ObserveDuration()
 
@@ -297,7 +298,7 @@ func writesToCrateRequest(req *prompb.WriteRequest) *crateWriteRequest {
 	return request
 }
 
-func (ca *crateAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
+func (ca *crateDbPrometheusAdapter) handleWrite(w http.ResponseWriter, r *http.Request) {
 	timer := prometheus.NewTimer(writeDuration)
 	defer timer.ObserveDuration()
 
@@ -409,7 +410,7 @@ func main() {
 	// Try each endpoint once.
 	retry := lb.Retry(len(conf.Endpoints), 1*time.Minute, balancer)
 
-	ca := crateAdapter{
+	ca := crateDbPrometheusAdapter{
 		ep: retry,
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -424,6 +425,7 @@ func main() {
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
 	http.Handle("/metrics", promhttp.Handler())
+	log.Info("Starting CrateDB Prometheus Adapter")
 	log.With("address", *listenAddress).Info("Listening ...")
 	log.With("endpoints", conf.toString()).Info("Connecting ...")
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))

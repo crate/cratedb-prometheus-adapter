@@ -1,1 +1,0 @@
-CRATE_ADAPTER_OPTS=-config.file=/etc/crate_adapter/config.yml -log.level=warn
