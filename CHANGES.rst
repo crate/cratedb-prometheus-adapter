@@ -5,8 +5,18 @@ CHANGES for Prometheus CrateDB Adapter
 Unreleased
 ==========
 
+BREAKING CHANGES
+
+- This release changes the program name to ``cratedb-prometheus-adapter``
+  and the default prefix for exported metrics to ``cratedb_prometheus_adapter_``.
+  The latter can be reconfigured using the new ``-metrics.export.prefix`` option.
+
+Details:
+
 - Provide a default ``config.yml`` in the Docker image, which can be replaced
   by mounting a file on ``/etc/cratedb-prometheus-adapter/config.yml``.
+
+- Made Go 1.16 a minimum requirement.
 
 - Updated project to make use of `Go modules <https://golang.org/ref/mod>`_
   instead of Govendor.
