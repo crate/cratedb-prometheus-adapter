@@ -12,7 +12,8 @@ BREAKING CHANGES
   and the default prefix for exported metrics to ``cratedb_prometheus_adapter_``.
   The latter can be reconfigured using the new ``-metrics.export.prefix`` option.
 
-Details:
+CHANGES
+-------
 
 - Provide a default ``config.yml`` in the Docker image, which can be replaced
   by mounting a file on ``/etc/cratedb-prometheus-adapter/config.yml``.
