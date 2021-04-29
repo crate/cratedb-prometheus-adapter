@@ -5,6 +5,11 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+- Network behaviour: Adjust TCP timeout and keepalive settings
+
+  - KeepAlive: 15 seconds
+  - Timeout: 10 seconds
+
 2021-04-29 0.3.0
 ================
 

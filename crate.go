@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -46,6 +47,10 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 		User:     ep.User,
 		Password: ep.Password,
 		Database: ep.Schema,
+		Dial: (&net.Dialer{
+			KeepAlive: 15 * time.Second,
+			Timeout: 10 * time.Second,
+		}).Dial,
 	}
 	if ep.EnableTLS {
 		connConf.TLSConfig = &tls.Config{
