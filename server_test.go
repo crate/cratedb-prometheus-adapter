@@ -340,7 +340,9 @@ func TestExportedMetrics(t *testing.T) {
 	metrics, _ := prometheus.DefaultGatherer.Gather()
 	for _, metric := range metrics {
 		name := metric.GetName()
-		if !strings.HasPrefix(name, "cratedb_prometheus_adapter_") && !strings.HasPrefix(name, "go_") {
+		if !strings.HasPrefix(name, "cratedb_prometheus_adapter_") &&
+			!strings.HasPrefix(name, "go_") &&
+			!strings.HasPrefix(name, "process_") {
 			message := fmt.Sprintf("Exported metrics prefix does not match expectation for '%s'", name)
 			t.Fatal(message)
 		}
