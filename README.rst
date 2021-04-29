@@ -59,7 +59,12 @@ and create hourly, weekly,... partitions.
 
 Then run the adapter::
 
+  # When using the single binary
   ./cratedb-prometheus-adapter
+
+  # When using Docker
+  docker run -it --rm -publish=9268:9268 ghcr.io/crate/cratedb-prometheus-adapter:0.3.0
+
 
 By default the adapter will listen on port ``9268``.
 This and more is configurable via command line flags, which you can see by passing the ``-h`` flag.
@@ -101,8 +106,9 @@ Add the following to your ``prometheus.yml``:
 
 The adapter also exposes Prometheus metrics on ``/metrics``, and can be scraped in the usual fashion.
 
-Running with Docker
-===================
+
+Building the Docker image
+=========================
 
 The project contains a ``Dockerfile`` which can be used to build a Docker
 image.
