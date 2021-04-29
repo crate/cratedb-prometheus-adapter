@@ -3,7 +3,7 @@ WORKDIR /go/src/github.com/crate/cratedb-prometheus-adapter
 COPY . /go/src/github.com/crate/cratedb-prometheus-adapter/
 RUN CGO_ENABLED=0 GOOS=linux go build
 
-FROM alpine:3.13
+FROM scratch
 EXPOSE 9268
 COPY --from=builder /go/src/github.com/crate/cratedb-prometheus-adapter/cratedb-prometheus-adapter /usr/bin/cratedb-prometheus-adapter
 WORKDIR /etc/cratedb-prometheus-adapter
