@@ -14,8 +14,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        go-version: [1.14.x, 1.15.x, 1.16.x]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        go-version: [ 1.16.x ]
       fail-fast: true
 
     steps:
@@ -37,4 +37,4 @@ jobs:
 
       - name: Invoke tests
         run: |
-          go test
+          go test -v
