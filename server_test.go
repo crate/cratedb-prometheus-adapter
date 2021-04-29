@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"path/filepath"
 	"reflect"
 	"regexp/syntax"
 	"strings"
@@ -242,7 +243,7 @@ func TestLoadConfig(t *testing.T) {
 		config      *config
 	}{
 		{
-			file:       "fixtures/config_good.yml",
+			file:       filepath.Join("fixtures", "config_good.yml"),
 			shouldFail: false,
 			config: &config{
 				Endpoints: []endpointConfig{
@@ -280,22 +281,22 @@ func TestLoadConfig(t *testing.T) {
 			},
 		},
 		{
-			file:        "fixtures/config_no_endpoints.yml",
+			file:        filepath.Join("fixtures", "config_no_endpoints.yml"),
 			shouldFail:  true,
 			errContains: "no CrateDB endpoints provided",
 		},
 		{
-			file:        "fixtures/config_unknown_fields.yml",
+			file:        filepath.Join("fixtures", "config_unknown_fields.yml"),
 			shouldFail:  true,
 			errContains: "field unknown_fields not found",
 		},
 		{
-			file:        "fixtures/config_invalid_yaml.yml",
+			file:        filepath.Join("fixtures", "config_invalid_yaml.yml"),
 			shouldFail:  true,
 			errContains: "error unmarshaling YAML",
 		},
 		{
-			file:        "fixtures/config_missing_file.yml",
+			file:        filepath.Join("fixtures", "config_missing_file.yml"),
 			shouldFail:  true,
 			errContains: "no such file or directory",
 		},
