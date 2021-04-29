@@ -6,6 +6,7 @@ Unreleased
 ==========
 
 BREAKING CHANGES
+----------------
 
 - This release changes the program name to ``cratedb-prometheus-adapter``
   and the default prefix for exported metrics to ``cratedb_prometheus_adapter_``.
