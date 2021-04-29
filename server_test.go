@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp/syntax"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -298,7 +299,13 @@ func TestLoadConfig(t *testing.T) {
 		{
 			file:        filepath.Join("fixtures", "config_missing_file.yml"),
 			shouldFail:  true,
-			errContains: "no such file or directory",
+			errContains: func(os string) string {
+				if os == "windows" {
+					return "The system cannot find the file specified"
+				} else {
+					return "no such file or directory"
+				}
+			}(runtime.GOOS),
 		},
 	}
 
