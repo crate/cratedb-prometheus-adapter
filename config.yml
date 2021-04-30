@@ -4,6 +4,7 @@ crate_endpoints:
   user: "crate"             # Username to use (default: "crate")
   password: ""              # Password to use (default: "").
   schema: ""                # Schema to use (default: "").
+  connect_timeout: 10       # TCP connect timeout (seconds) (default: 10).
   max_connections: 5        # The maximum number of concurrent connections (default: 5).
   enable_tls: false         # Whether to connect using TLS (default: false).
   allow_insecure_tls: false # Whether to allow insecure / invalid TLS certificates (default: false).

@@ -344,6 +344,7 @@ type endpointConfig struct {
 	Schema           string `yaml:"schema"`
 	EnableTLS        bool   `yaml:"enable_tls"`
 	AllowInsecureTLS bool   `yaml:"allow_insecure_tls"`
+	ConnectTimeout   int    `yaml:"connect_timeout"`
 	MaxConnections   int    `yaml:"max_connections"`
 }
 
@@ -384,6 +385,9 @@ func loadConfig(filename string) (*config, error) {
 		}
 		if conf.Endpoints[i].MaxConnections == 0 {
 			conf.Endpoints[i].MaxConnections = 5
+		}
+		if conf.Endpoints[i].ConnectTimeout == 0 {
+			conf.Endpoints[i].ConnectTimeout = 10
 		}
 	}
 	return conf, nil

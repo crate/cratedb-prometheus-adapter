@@ -5,10 +5,16 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
-- Network behaviour: Adjust TCP timeout and keepalive settings
+- Improve network behaviour: Adjust TCP timeout and keepalive settings to
+  mitigate problems that can occur when the adapter in connecting to CrateDB
+  via a load balancer that may drop idle connections in-transparently, such as
+  in AKS. The default values are:
 
-  - KeepAlive: 15 seconds
-  - Timeout: 10 seconds
+    - KeepAlive: 30 seconds
+    - ConnectTimeout: 10 seconds
+
+  The TCP connect timeout can be adjusted by using the ``-tcp.connect.timeout``
+  option.
 
 2021-04-29 0.3.0
 ================
