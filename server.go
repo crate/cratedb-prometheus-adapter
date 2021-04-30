@@ -349,7 +349,7 @@ type endpointConfig struct {
 }
 
 type config struct {
-	Endpoints []endpointConfig `yaml:"crate_endpoints"`
+	Endpoints []endpointConfig `yaml:"cratedb_endpoints"`
 }
 
 func (c *config) toString() string {

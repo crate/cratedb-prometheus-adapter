@@ -1,4 +1,4 @@
-crate_endpoints:
+cratedb_endpoints:
 - host: "host1"
   port: 1
   user: "user1"
