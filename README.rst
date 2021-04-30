@@ -63,7 +63,7 @@ Then run the adapter::
   ./cratedb-prometheus-adapter
 
   # When using Docker
-  docker run -it --rm -publish=9268:9268 ghcr.io/crate/cratedb-prometheus-adapter:0.3.0
+  docker run -it --rm --publish=9268:9268 ghcr.io/crate/cratedb-prometheus-adapter
 
 
 By default the adapter will listen on port ``9268``.
