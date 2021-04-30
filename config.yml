@@ -1,4 +1,4 @@
-crate_endpoints:
+cratedb_endpoints:
 - host: "localhost"         # Host to connect to (default: "localhost").
   port: 5432                # Port to connect to (default: 5432).
   user: "crate"             # Username to use (default: "crate")

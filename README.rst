@@ -73,8 +73,8 @@ The CrateDB endpoints are provided in a configuration file, which defaults to
 ``config.yml`` (``-config.file`` flag). The included example configuration file forwards
 samples to a CrateDB running on ``localhost`` on port ``5432``.
 
-Adapter Crate Endpoint Configuration
-====================================
+CrateDB Adapter Endpoint Configuration
+======================================
 
 The CrateDB endpoints that the adapter writes to are configured in a YAML-based configuration
 file provided by the ``-config.file`` flag. If multiple endpoints are listed, the adapter will
@@ -82,7 +82,7 @@ load-balance between them. The options (for one example endpoint) are as below:
 
 .. code-block:: yaml
 
-  crate_endpoints:
+  cratedb_endpoints:
   - host: "localhost"         # Host to connect to (default: "localhost").
     port: 5432                # Port to connect to (default: 5432).
     user: "crate"             # Username to use (default: "crate")

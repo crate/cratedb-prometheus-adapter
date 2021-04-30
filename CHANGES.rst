@@ -5,6 +5,15 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+BREAKING CHANGES
+----------------
+
+- This release changes the toplevel configuration section name to ``cratedb_endpoints``.
+  It is an aftermath of the "naming things" refactorings happening in 0.3.0.
+
+CHANGES
+-------
+
 - Improve network behaviour: Adjust TCP timeout and keepalive settings to
   mitigate problems that can occur when the adapter in connecting to CrateDB
   via a load balancer that may drop idle connections in-transparently, such as
