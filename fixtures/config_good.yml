@@ -5,6 +5,7 @@ crate_endpoints:
   password: "password1"
   schema: "schema1"
   max_connections: 10
+  connect_timeout: 30
   enable_tls: false
 - host: "host2"
   port: 2
@@ -12,6 +13,7 @@ crate_endpoints:
   password: "password2"
   schema: "schema2"
   max_connections: 20
+  connect_timeout: 30
   enable_tls: true
   allow_insecure_tls: false
 # Entry to test default values.

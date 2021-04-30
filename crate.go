@@ -48,8 +48,8 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 		Password: ep.Password,
 		Database: ep.Schema,
 		Dial: (&net.Dialer{
-			KeepAlive: 15 * time.Second,
-			Timeout: 10 * time.Second,
+			KeepAlive: 30 * time.Second,
+			Timeout: time.Duration(ep.ConnectTimeout) * time.Second,
 		}).Dial,
 	}
 	if ep.EnableTLS {
