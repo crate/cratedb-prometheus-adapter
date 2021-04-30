@@ -1,1 +1,1 @@
-CRATEDB_PROMETHEUS_ADAPTER_OPTS=-config.file=/etc/cratedb-prometheus-adapter/config.yml -log.level=warn
+CRATEDB_PROMETHEUS_ADAPTER_OPTS=-config.file=/etc/cratedb-prometheus-adapter/config.yml
