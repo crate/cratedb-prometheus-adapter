@@ -77,6 +77,15 @@ Next:
 
 - Trigger the build/release script on `Jenkins CI`_ for the newly created tag
 
+Maintaining the jobs
+====================
+
+In order to create release archives, CI invokes::
+
+    ./devtools/release.sh
+
+As this is driven by Docker, it can be tested and maintained independently of CI.
+
 .. _Jenkins CI: https://jenkins.crate.io
 
 
