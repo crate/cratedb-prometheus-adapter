@@ -302,8 +302,8 @@ func TestLoadConfig(t *testing.T) {
 			errContains: "error unmarshaling YAML",
 		},
 		{
-			file:        filepath.Join("fixtures", "config_missing_file.yml"),
-			shouldFail:  true,
+			file:       filepath.Join("fixtures", "config_missing_file.yml"),
+			shouldFail: true,
 			errContains: func(os string) string {
 				if os == "windows" {
 					return "The system cannot find the file specified"
