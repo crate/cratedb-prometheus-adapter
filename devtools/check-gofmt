@@ -1,0 +1,24 @@
+#!/bin/bash
+# Check that all *.go files comply to gofmt formatting.
+# This script can be used as git pre-commit hook. To do so, copy this file into
+# `.git/hooks/` directory and name it `pre-commit`.
+
+print_stderr() {
+  >&2 echo -e "$*"
+}
+
+hash gofmt 2>&- || { print_stderr "gofmt not in \$PATH=$PATH"; exit 1; }
+
+DIFF="$(mktemp)"
+
+trap "rm -f $DIFF" EXIT
+find . -name "*.go" -exec gofmt -l {} \; > "$DIFF"
+
+if [ $(cat "$DIFF" | wc -l) -gt 0 ]; then
+  print_stderr "\033[31mSome files need to be formatted using gofmt:\033[0m"
+  print_stderr "$(cat $DIFF)"
+  print_stderr " "
+  print_stderr "Run the following command and commit again:"
+  print_stderr "git diff --name-only --diff-filter=ACM | grep '.go$' | xargs gofmt -w -l"
+  exit 1
+fi
