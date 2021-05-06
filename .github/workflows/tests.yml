@@ -35,6 +35,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Lint code using gofmt
+        run: |
+          ./devtools/check-gofmt
+
       - name: Invoke tests
         run: |
           go test -v
