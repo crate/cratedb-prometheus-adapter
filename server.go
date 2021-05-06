@@ -28,49 +28,49 @@ import (
 const version = "0.5.0-dev"
 
 var (
-	listenAddress = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
-	configFile    = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
+	listenAddress       = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
+	configFile          = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
 	metricsExportPrefix = flag.String("metrics.export.prefix", "cratedb_prometheus_adapter_", "Prefix for exported CrateDB metrics.")
-	printVersion  = flag.Bool("version", false, "Print version information.")
+	printVersion        = flag.Bool("version", false, "Print version information.")
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: fmt.Sprintf( "%swrite_latency_seconds", *metricsExportPrefix),
+		Name: fmt.Sprintf("%swrite_latency_seconds", *metricsExportPrefix),
 		Help: "How long it took us to respond to write requests.",
 	})
 	writeErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: fmt.Sprintf( "%swrite_failed_total", *metricsExportPrefix),
+		Name: fmt.Sprintf("%swrite_failed_total", *metricsExportPrefix),
 		Help: "How many write request we returned errors for.",
 	})
 	writeSamples = prometheus.NewSummary(prometheus.SummaryOpts{
-		Name: fmt.Sprintf( "%swrite_timeseries_samples", *metricsExportPrefix),
+		Name: fmt.Sprintf("%swrite_timeseries_samples", *metricsExportPrefix),
 		Help: "How many samples each written timeseries has.",
 	})
 	writeCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: fmt.Sprintf( "%swrite_crate_latency_seconds", *metricsExportPrefix),
+		Name: fmt.Sprintf("%swrite_crate_latency_seconds", *metricsExportPrefix),
 		Help: "Latency for inserts to Crate.",
 	})
 	writeCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: fmt.Sprintf( "%swrite_crate_failed_total", *metricsExportPrefix),
+		Name: fmt.Sprintf("%swrite_crate_failed_total", *metricsExportPrefix),
 		Help: "How many inserts to Crate failed.",
 	})
 	readDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: fmt.Sprintf( "%sread_latency_seconds", *metricsExportPrefix),
+		Name: fmt.Sprintf("%sread_latency_seconds", *metricsExportPrefix),
 		Help: "How long it took us to respond to read requests.",
 	})
 	readErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: fmt.Sprintf( "%sread_failed_total", *metricsExportPrefix),
+		Name: fmt.Sprintf("%sread_failed_total", *metricsExportPrefix),
 		Help: "How many read requests we returned errors for.",
 	})
 	readCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: fmt.Sprintf( "%sread_crate_latency_seconds", *metricsExportPrefix),
+		Name: fmt.Sprintf("%sread_crate_latency_seconds", *metricsExportPrefix),
 		Help: "Latency for selects from Crate.",
 	})
 	readCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: fmt.Sprintf( "%sread_crate_failed_total", *metricsExportPrefix),
+		Name: fmt.Sprintf("%sread_crate_failed_total", *metricsExportPrefix),
 		Help: "How many selects from Crate failed.",
 	})
 	readSamples = prometheus.NewSummary(prometheus.SummaryOpts{
-		Name: fmt.Sprintf( "%sread_timeseries_samples", *metricsExportPrefix),
+		Name: fmt.Sprintf("%sread_timeseries_samples", *metricsExportPrefix),
 		Help: "How many samples each returned timeseries has.",
 	})
 )
