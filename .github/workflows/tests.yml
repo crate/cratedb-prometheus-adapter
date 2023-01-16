@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        go-version: [ 1.16.x ]
+        go-version: [ 1.18.x, 1.19.x ]
       fail-fast: true
 
     steps:
