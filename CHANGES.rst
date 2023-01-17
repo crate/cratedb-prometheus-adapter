@@ -13,6 +13,9 @@ Unreleased
   In this case, the program will fall back to the builtin defaults, essentially
   connecting to ``localhost:5432`` with username ``crate``.
 
+- Add command line option ``-config.make`` to print a blueprint configuration
+  file to stdout.
+
 
 2021-05-04 0.4.0
 ================

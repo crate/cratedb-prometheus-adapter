@@ -359,3 +359,27 @@ func TestExportedMetrics(t *testing.T) {
 	}
 
 }
+
+func TestBuiltinConfig(t *testing.T) {
+
+	referenceConfig := &config{
+		Endpoints: []endpointConfig{
+			{
+				Host:             "localhost",
+				Port:             5432,
+				User:             "crate",
+				Password:         "",
+				Schema:           "",
+				ConnectTimeout:   10,
+				MaxConnections:   5,
+				EnableTLS:        false,
+				AllowInsecureTLS: false,
+			},
+		},
+	}
+
+	builtinConfig, _ := loadConfig("")
+	if !reflect.DeepEqual(referenceConfig, builtinConfig) {
+		t.Errorf("unexpected config contents;\n\nwant:\n\n%v\n\ngot:\n\n%v", referenceConfig, builtinConfig)
+	}
+}

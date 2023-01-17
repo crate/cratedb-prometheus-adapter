@@ -1,3 +1,5 @@
+.. highlights:: sh
+
 ==========================
 CrateDB Prometheus Adapter
 ==========================
@@ -45,7 +47,7 @@ Create the following table in your CrateDB database:
 Depending on data volume and retention you might want to optimize your partitioning scheme
 and create hourly, weekly, ... partitions.
 
-Then run the adapter::
+Then, run the adapter::
 
     # When using the single binary
     ./cratedb-prometheus-adapter
@@ -53,21 +55,22 @@ Then run the adapter::
     # When using Docker
     docker run -it --rm --publish=9268:9268 ghcr.io/crate/cratedb-prometheus-adapter
 
-By default the adapter will listen on port ``9268`` and will use a built-in
-configuration as outlined in the next section.
-This and more is configurable via command line flags, which you can see by
-passing the ``-h`` flag.
+By default, the adapter will listen on port ``9268`` and will use a built-in
+default configuration. More details how to individually configure it are
+outlined within the next section.
 
-The CrateDB endpoints are provided in a configuration file, which defaults to
-``config.yml`` (``-config.file`` flag). The included example configuration file
-forwards samples to a CrateDB running on ``localhost`` on port ``5432``.
+To display all available command line options and flags, use the ``-h`` flag.
 
 CrateDB Adapter Endpoint Configuration
 ======================================
 
-The path to the YAML-based configuration file can be provided by using the
-``-config.file`` command line option.
-The settings describe the CrateDB endpoints the adapter will write to.
+To configure the CrateDB endpoint(s) the adapter will write to, the path to the
+YAML-based configuration file can be provided by using the ``-config.file``
+command line option, its default value is ``config.yml``.
+
+To create a blueprint configuration file, run::
+
+    ./cratedb-prometheus-adapter -config.make > config.yml
 
 If multiple endpoints are listed, the adapter will load-balance between them.
 The options (with one example endpoint) are as below:

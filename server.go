@@ -31,6 +31,7 @@ var (
 	listenAddress       = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
 	configFile          = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
 	metricsExportPrefix = flag.String("metrics.export.prefix", "cratedb_prometheus_adapter_", "Prefix for exported CrateDB metrics.")
+	makeConfig          = flag.Bool("config.make", false, "Print configuration file blueprint to stdout.")
 	printVersion        = flag.Bool("version", false, "Print version information.")
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
@@ -402,6 +403,19 @@ func main() {
 
 	if *printVersion {
 		fmt.Println(version)
+		return
+	}
+
+	if *makeConfig {
+		blueprint := &config{}
+		blueprint, err := loadConfig("")
+		item := endpointConfig{}
+		blueprint.Endpoints = []endpointConfig{item}
+		d, err := yaml.Marshal(&blueprint)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		fmt.Printf(string(d))
 		return
 	}
 
