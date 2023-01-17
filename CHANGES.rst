@@ -5,6 +5,11 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+- Add support for Go 1.18 and 1.19, drop support for previous releases.
+
+- Update dependency packages: yaml.v2 to 2.4.0, pgx to 3.6.2, and testify to 1.8.1.
+
+
 2021-05-04 0.4.0
 ================
 
