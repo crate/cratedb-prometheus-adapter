@@ -362,12 +362,16 @@ func (c *config) toString() string {
 
 func loadConfig(filename string) (*config, error) {
 	content, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("error reading configuration file: %v", err)
-	}
 	conf := &config{}
-	if err = yaml.UnmarshalStrict(content, conf); err != nil {
-		return nil, fmt.Errorf("error unmarshaling YAML: %v", err)
+	if err != nil {
+		log.Warnf("No configuration file %q: %v", *configFile, err)
+		log.Infof("Falling back to default configuration")
+		item := endpointConfig{}
+		conf.Endpoints = []endpointConfig{item}
+	} else {
+		if err = yaml.UnmarshalStrict(content, conf); err != nil {
+			return nil, fmt.Errorf("error unmarshaling YAML: %v", err)
+		}
 	}
 
 	if len(conf.Endpoints) == 0 {
@@ -403,7 +407,7 @@ func main() {
 
 	conf, err := loadConfig(*configFile)
 	if err != nil {
-		log.Fatalf("Error loading configuration file %q: %v", *configFile, err)
+		log.Fatalf("Error loading configuration %q: %v", *configFile, err)
 	}
 
 	subscriber := sd.FixedEndpointer{}
