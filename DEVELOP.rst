@@ -40,7 +40,7 @@ To build the ``cratedb-prometheus-adapter`` executable, run::
 
 To run the test suite, execute::
 
-   go test
+   go test -v
 
 
 Maintaining dependencies
