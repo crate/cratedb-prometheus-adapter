@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/client_golang v0.9.0-pre1.0.20180623155954-77e8f2ddcfed
 	github.com/prometheus/common v0.0.0-20180518154759-7600349dcfe1
 	github.com/prometheus/prometheus v2.3.2-0.20180622142104-2bd510a63e48+incompatible
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -45,4 +45,5 @@ require (
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.0.12 // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
