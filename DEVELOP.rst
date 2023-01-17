@@ -43,6 +43,19 @@ To run the test suite, execute::
    go test
 
 
+Maintaining dependencies
+========================
+
+Display available minor and patch upgrades for all direct and indirect dependencies::
+
+   go list -u -m all
+
+Upgrade to the latest or minor patch releases, including test dependencies::
+
+   go get -t -u ./...
+   go mod tidy
+
+
 Preparing a Release
 ===================
 
