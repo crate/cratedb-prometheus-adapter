@@ -6,7 +6,7 @@ require (
 	github.com/go-kit/kit v0.7.1-0.20180619214315-e2d71a06a40a
 	github.com/golang/protobuf v1.5.2
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
-	github.com/jackc/pgx v3.1.1-0.20180608201956-39bbc98d99d7+incompatible
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/prometheus/client_golang v0.9.0-pre1.0.20180623155954-77e8f2ddcfed
 	github.com/prometheus/common v0.0.0-20180518154759-7600349dcfe1
 	github.com/prometheus/prometheus v2.3.2-0.20180622142104-2bd510a63e48+incompatible
@@ -22,6 +22,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logfmt/logfmt v0.3.0 // indirect
 	github.com/go-stack/stack v1.7.0 // indirect
+	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -32,7 +33,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/prometheus/procfs v0.0.0-20180612222113-7d6f385de8be // indirect
-	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.0.6-0.20180625052543-e3292c4c4d7f // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
