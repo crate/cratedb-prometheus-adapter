@@ -9,6 +9,10 @@ Unreleased
 
 - Update dependency packages across the board to their latest or minor patch releases.
 
+- Accept invoking the program without default configuration file ``config.yml``.
+  In this case, the program will fall back to the builtin defaults, essentially
+  connecting to ``localhost:5432`` with username ``crate``.
+
 
 2021-05-04 0.4.0
 ================
