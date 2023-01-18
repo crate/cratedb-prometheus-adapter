@@ -61,7 +61,7 @@ outlined within the next section.
 
 To display all available command line options and flags, use the ``-h`` flag.
 
-CrateDB Adapter Endpoint Configuration
+CrateDB adapter endpoint configuration
 ======================================
 
 To configure the CrateDB endpoint(s) the adapter will write to, the path to the
@@ -88,7 +88,7 @@ The options (with one example endpoint) are as below:
     enable_tls: false         # Whether to connect using TLS (default: false).
     allow_insecure_tls: false # Whether to allow insecure / invalid TLS certificates (default: false).
 
-Prometheus Configuration
+Prometheus configuration
 ========================
 
 In order to forward write and read requests to the CrateDB adapter, adjust your
@@ -104,25 +104,34 @@ In order to forward write and read requests to the CrateDB adapter, adjust your
 The adapter also exposes Prometheus metrics on ``/metrics``, which can be scraped in the usual way.
 
 
-Running as service
-==================
+Running as systemd service
+==========================
 
-In order to run ``cratedb-prometheus-adapter`` as a system service on Linux,
-the repository provides configuration files to configure the program as a
-``systemd`` service unit. This section outlines how to apply that configuration.
+In order to invoke ``cratedb-prometheus-adapter`` as a system service on Linux,
+the repository provides corresponding configuration files to deploy the program
+as a ``systemd`` service unit. This section outlines how to do this.
 
-Copy `<config.yml>`_ to ``/etc/cratedb-prometheus-adapter/config.yml`` and adjust as needed.
+For the systemd-based setup, you need four files to be correctly deployed to
+your machine.
 
-Copy `<systemd/cratedb-prometheus-adapter.service>`_ to ``/etc/systemd/system/cratedb-prometheus-adapter.service`` or
-just link the service file by running: ``sudo systemctl link $(pwd)/cratedb-prometheus-adapter.service``
-and run::
+1. ``/usr/bin/cratedb-prometheus-adapter``.
+   This is the program itself, extracted from the corresponding tarball
+   distribution package at https://cdn.crate.io/downloads/dist/prometheus/.
+2. ``/etc/cratedb-prometheus-adapter/config.yml``.
+   Get it from `config.yml`_ and adjust the settings according to your needs.
+3. ``/etc/systemd/system/cratedb-prometheus-adapter.service``.
+   Get it from `cratedb-prometheus-adapter.service`_.
+4. ``/etc/default/cratedb-prometheus-adapter``.
+   Get it from `cratedb-prometheus-adapter.default`_.
+
+Mostly, you will only need to make any adjustments to the configuration file
+``/etc/cratedb-prometheus-adapter/config.yml``.
+
+After deploying those files correctly, invoking the following commands will
+start the service, and enable it to be started automatically on system boot::
 
     systemctl daemon-reload
-
-Change flag-based configuration by changing the settings in ``/etc/default/cratedb-prometheus-adapter``
-based on the `<systemd/cratedb-prometheus-adapter.default>`_ template. After that you can::
-
-    systemctl start cratedb-prometheus-adapter
+    systemctl restart cratedb-prometheus-adapter
     systemctl enable cratedb-prometheus-adapter
 
 
@@ -137,3 +146,8 @@ based on the `<systemd/cratedb-prometheus-adapter.default>`_ template. After tha
 .. |license| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
     :alt: License: Apache 2.0
     :target: https://opensource.org/licenses/Apache-2.0
+
+
+.. _config.yml: https://github.com/crate/cratedb-prometheus-adapter/blob/main/config.yml
+.. _cratedb-prometheus-adapter.default: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.default
+.. _cratedb-prometheus-adapter.service: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.service
