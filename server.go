@@ -447,7 +447,7 @@ func main() {
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
 	http.Handle("/metrics", promhttp.Handler())
-	log.Info("Starting CrateDB Prometheus Adapter")
+	log.Infof("Starting CrateDB Prometheus Adapter %v", version)
 	log.With("address", *listenAddress).Info("Listening ...")
 	log.With("endpoints", conf.toString()).Info("Connecting ...")
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))

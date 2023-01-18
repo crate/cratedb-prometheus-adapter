@@ -16,6 +16,8 @@ Unreleased
 - Add command line option ``-config.make`` to print a blueprint configuration
   file to stdout.
 
+- Add program version to startup log message
+
 
 2021-05-04 0.4.0
 ================
