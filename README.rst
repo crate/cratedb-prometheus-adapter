@@ -1,4 +1,4 @@
-.. highlights:: sh
+.. highlight:: sh
 
 ==========================
 CrateDB Prometheus Adapter
