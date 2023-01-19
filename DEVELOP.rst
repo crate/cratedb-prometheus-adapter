@@ -34,6 +34,10 @@ To simply run the adapter, invoke::
 
    go run .
 
+To print a default configuration to stdout, use::
+
+   go run . -config.make
+
 To build the ``cratedb-prometheus-adapter`` executable, run::
 
    go build
