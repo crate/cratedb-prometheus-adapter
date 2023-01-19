@@ -378,7 +378,7 @@ func TestBuiltinConfig(t *testing.T) {
 		},
 	}
 
-	builtinConfig, _ := loadConfig("")
+	builtinConfig := builtinConfig()
 	if !reflect.DeepEqual(referenceConfig, builtinConfig) {
 		t.Errorf("unexpected config contents;\n\nwant:\n\n%v\n\ngot:\n\n%v", referenceConfig, builtinConfig)
 	}

@@ -361,6 +361,14 @@ func (c *config) toString() string {
 	return strings.Join(ep, ",")
 }
 
+func (c *config) toYaml() string {
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		log.Fatalf("Serialization to YAML failed: %v", err)
+	}
+	return string(data)
+}
+
 func loadConfig(filename string) (*config, error) {
 	content, err := ioutil.ReadFile(filename)
 	conf := &config{}
@@ -398,6 +406,11 @@ func loadConfig(filename string) (*config, error) {
 	return conf, nil
 }
 
+func builtinConfig() *config {
+	blueprint, _ := loadConfig("")
+	return blueprint
+}
+
 func main() {
 	flag.Parse()
 
@@ -407,15 +420,7 @@ func main() {
 	}
 
 	if *makeConfig {
-		blueprint := &config{}
-		blueprint, err := loadConfig("")
-		item := endpointConfig{}
-		blueprint.Endpoints = []endpointConfig{item}
-		d, err := yaml.Marshal(&blueprint)
-		if err != nil {
-			log.Fatalf("error: %v", err)
-		}
-		fmt.Printf(string(d))
+		fmt.Println(builtinConfig().toYaml())
 		return
 	}
 
