@@ -29,7 +29,7 @@ const version = "0.5.0-dev"
 
 var (
 	listenAddress       = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")
-	configFile          = flag.String("config.file", "config.yml", "Path to the CrateDB endpoints configuration file.")
+	configFile          = flag.String("config.file", "", "Path to the CrateDB endpoints configuration file.")
 	metricsExportPrefix = flag.String("metrics.export.prefix", "cratedb_prometheus_adapter_", "Prefix for exported CrateDB metrics.")
 	makeConfig          = flag.Bool("config.make", false, "Print configuration file blueprint to stdout.")
 	printVersion        = flag.Bool("version", false, "Print version information.")
@@ -370,17 +370,21 @@ func (c *config) toYaml() string {
 }
 
 func loadConfig(filename string) (*config, error) {
-	content, err := ioutil.ReadFile(filename)
 	conf := &config{}
-	if err != nil {
-		log.Warnf("No configuration file %q: %v", *configFile, err)
-		log.Infof("Falling back to default configuration")
+	if filename != "" {
+		log.Infof("Reading configuration from file \"%s\"", filename)
+		content, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("reading configuration file %q failed: %v", filename, err)
+		} else {
+			if err = yaml.UnmarshalStrict(content, conf); err != nil {
+				return nil, fmt.Errorf("error unmarshaling YAML: %v", err)
+			}
+		}
+	} else {
+		log.Warnf("No configuration file used, falling back to built-in configuration")
 		item := endpointConfig{}
 		conf.Endpoints = []endpointConfig{item}
-	} else {
-		if err = yaml.UnmarshalStrict(content, conf); err != nil {
-			return nil, fmt.Errorf("error unmarshaling YAML: %v", err)
-		}
 	}
 
 	if len(conf.Endpoints) == 0 {
@@ -412,6 +416,9 @@ func builtinConfig() *config {
 }
 
 func main() {
+
+	log.Infof("Starting CrateDB Prometheus Adapter %v", version)
+
 	flag.Parse()
 
 	if *printVersion {
@@ -452,7 +459,6 @@ func main() {
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
 	http.Handle("/metrics", promhttp.Handler())
-	log.Infof("Starting CrateDB Prometheus Adapter %v", version)
 	log.With("address", *listenAddress).Info("Listening ...")
 	log.With("endpoints", conf.toString()).Info("Connecting ...")
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))

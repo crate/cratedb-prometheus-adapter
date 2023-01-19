@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp/syntax"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -302,22 +303,14 @@ func TestLoadConfig(t *testing.T) {
 		},
 		{
 			file:       filepath.Join("fixtures", "config_missing_file.yml"),
-			shouldFail: false,
-			config: &config{
-				Endpoints: []endpointConfig{
-					{
-						Host:             "localhost",
-						Port:             5432,
-						User:             "crate",
-						Password:         "",
-						Schema:           "",
-						ConnectTimeout:   10,
-						MaxConnections:   5,
-						EnableTLS:        false,
-						AllowInsecureTLS: false,
-					},
-				},
-			},
+			shouldFail: true,
+			errContains: func(os string) string {
+				if os == "windows" {
+					return "The system cannot find the file specified"
+				} else {
+					return "no such file or directory"
+				}
+			}(runtime.GOOS),
 		},
 	}
 

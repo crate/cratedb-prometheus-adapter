@@ -66,7 +66,7 @@ CrateDB adapter endpoint configuration
 
 To configure the CrateDB endpoint(s) the adapter will write to, the path to the
 YAML-based configuration file can be provided by using the ``-config.file``
-command line option, its default value is ``config.yml``.
+command line option.
 
 To create a blueprint configuration file, run::
 
