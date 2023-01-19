@@ -5,6 +5,16 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+BREAKING CHANGES
+----------------
+
+- This release removes the default value for the ``-config.file`` command line
+  option, which was ``config.yml``. When the option is omitted, the service
+  will use the built-in settings, connecting to CrateDB on ``localhost:5432``.
+
+CHANGES
+-------
+
 - Add support for Go 1.18 and 1.19, drop support for previous releases.
 
 - Update dependency packages across the board to their latest or minor patch releases.
