@@ -54,9 +54,9 @@ Display available minor and patch upgrades for all direct and indirect dependenc
 
    go list -u -m all
 
-Upgrade to the latest or minor patch releases, including test dependencies::
+Update to the latest patch releases, including test dependencies::
 
-   go get -t -u ./...
+   go get -u=patch -t
    go mod tidy
 
 
