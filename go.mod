@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/go-kit/kit v0.9.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/golang/snappy v0.0.4
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/prometheus/client_golang v1.11.1
