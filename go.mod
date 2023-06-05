@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.11.1
 	github.com/prometheus/common v0.26.0
 	github.com/prometheus/prometheus v2.3.2-0.20180622142104-2bd510a63e48+incompatible
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v2 v2.4.0
 )
 
