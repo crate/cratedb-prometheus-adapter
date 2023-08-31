@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net"
+	"github.com/jackc/pgx/v4"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/jackc/pgx"
-	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/prometheus/common/model"
 )
 
@@ -36,31 +36,58 @@ type crateReadResponse struct {
 }
 
 type crateEndpoint struct {
-	pool     *pgx.ConnPool
-	poolConf pgx.ConnPoolConfig
+	pool     *pgxpool.Pool
+	poolConf *pgxpool.Config
 }
 
 func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
-	connConf := pgx.ConnConfig{
-		Host:     ep.Host,
-		Port:     ep.Port,
-		User:     ep.User,
-		Password: ep.Password,
-		Database: ep.Schema,
-		Dial: (&net.Dialer{
-			KeepAlive: 30 * time.Second,
-			Timeout:   time.Duration(ep.ConnectTimeout) * time.Second,
-		}).Dial,
+
+	// pgx4 starts using connection strings exclusively, in both URL and DSN formats.
+	// The single entrypoint to obtain a valid configuration object, is `pgx.ParseConfig`,
+	// which aims to be compatible with libpq.
+
+	// ParseConfig builds a *Config from connString with similar behavior to the PostgreSQL
+	// standard C library libpq. It uses the same defaults as libpq (e.g. port=5432), and
+	// understands most PG* environment variables.
+	//
+	// ParseConfig closely matches the parsing behavior of libpq. connString may either be
+	// in URL or DSN format. connString also may be empty to only read from the environment.
+	// If a password is not supplied it will attempt to read the .pgpass file.
+	//
+	// See https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING for details.
+	//
+	//   # Example DSN
+	//   user=jack password=secret host=pg.example.com port=5432 dbname=mydb sslmode=verify-ca
+	//
+	//   # Example URL
+	//   postgres://jack:secret@pg.example.com:5432/mydb?sslmode=verify-ca
+	connectionString := fmt.Sprintf(
+		"postgres://%s:%s@%s:%v/%s?connect_timeout=%v&pool_max_conns=%v",
+		ep.User, ep.Password, ep.Host, ep.Port, ep.Schema, ep.ConnectTimeout, ep.MaxConnections)
+	poolConf, err := pgxpool.ParseConfig(connectionString)
+	if err != nil {
+		return nil
 	}
+
+	// Configure TLS settings.
 	if ep.EnableTLS {
-		connConf.TLSConfig = &tls.Config{
+		poolConf.ConnConfig.TLSConfig = &tls.Config{
 			ServerName:         ep.Host,
 			InsecureSkipVerify: ep.AllowInsecureTLS,
 		}
 	}
-	poolConf := pgx.ConnPoolConfig{
-		ConnConfig:     connConf,
-		MaxConnections: ep.MaxConnections,
+
+	// pgx v4
+	// If you are using `pgxpool`, then you can use `AfterConnect` to prepare statements. That will
+	// ensure that they are available on every connection. Otherwise, you will have to acquire
+	// a connection from the pool manually and prepare it there before use.
+	// https://github.com/jackc/pgx/issues/791#issuecomment-660508309
+	poolConf.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		_, err := conn.Prepare(ctx, "write_statement", crateWriteStatement)
+		if err != nil {
+			return fmt.Errorf("error preparing write statement: %v", err)
+		}
+		return err
 	}
 	return &crateEndpoint{poolConf: poolConf}
 }
@@ -70,7 +97,7 @@ func (c *crateEndpoint) endpoint() endpoint.Endpoint {
 		// We initialize the connection pool lazily here instead of in newCrateEndpoint() so
 		// that the adapter does not crash on startup if an endpoint is unavailable.
 		if c.pool == nil {
-			pool, err := pgx.NewConnPool(c.poolConf)
+			pool, err := pgxpool.ConnectConfig(ctx, c.poolConf)
 			if err != nil {
 				return nil, fmt.Errorf("error opening connection to CrateDB: %v", err)
 			}
@@ -89,12 +116,7 @@ func (c *crateEndpoint) endpoint() endpoint.Endpoint {
 }
 
 func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
-	_, err := c.pool.PrepareEx(ctx, "write_statement", crateWriteStatement, nil)
-	if err != nil {
-		return fmt.Errorf("error preparing write statement: %v", err)
-	}
-
-	batch := c.pool.BeginBatch()
+	batch := &pgx.Batch{}
 	for _, a := range r.rows {
 		batch.Queue(
 			"write_statement",
@@ -117,12 +139,13 @@ func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
 		)
 	}
 
-	err = batch.Send(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("error executing write batch: %v", err)
+	batchResults := c.pool.SendBatch(ctx, batch)
+	var qerr error
+	if qerr != nil {
+		return fmt.Errorf("error executing write batch: %v", qerr)
 	}
 
-	err = batch.Close()
+	err := batchResults.Close()
 	if err != nil {
 		return fmt.Errorf("error closing write batch: %v", err)
 	}
@@ -130,7 +153,7 @@ func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
 }
 
 func (c crateEndpoint) read(ctx context.Context, r *crateReadRequest) (*crateReadResponse, error) {
-	rows, err := c.pool.QueryEx(ctx, r.stmt, nil)
+	rows, err := c.pool.Query(ctx, r.stmt, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error executing read request query: %v", err)
 	}
