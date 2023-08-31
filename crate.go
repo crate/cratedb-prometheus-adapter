@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/jackc/pgtype"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/common/model"
 )
 
@@ -97,7 +97,7 @@ func (c *crateEndpoint) endpoint() endpoint.Endpoint {
 		// We initialize the connection pool lazily here instead of in newCrateEndpoint() so
 		// that the adapter does not crash on startup if an endpoint is unavailable.
 		if c.pool == nil {
-			pool, err := pgxpool.ConnectConfig(ctx, c.poolConf)
+			pool, err := pgxpool.NewWithConfig(ctx, c.poolConf)
 			if err != nil {
 				return nil, fmt.Errorf("error opening connection to CrateDB: %v", err)
 			}
