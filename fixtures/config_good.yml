@@ -5,6 +5,8 @@ cratedb_endpoints:
   password: "password1"
   schema: "schema1"
   max_connections: 10
+  read_pool_size_max: 20
+  write_pool_size_max: 5
   connect_timeout: 30
   read_timeout: 60
   write_timeout: 30

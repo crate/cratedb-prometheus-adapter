@@ -36,10 +36,13 @@ type crateReadResponse struct {
 }
 
 type crateEndpoint struct {
-	pool         *pgxpool.Pool
-	poolConf     *pgxpool.Config
-	readTimeout  time.Duration
-	writeTimeout time.Duration
+	poolConf      *pgxpool.Config
+	readPoolSize  int
+	writePoolSize int
+	readTimeout   time.Duration
+	writeTimeout  time.Duration
+	readPool      *pgxpool.Pool
+	writePool     *pgxpool.Pool
 }
 
 func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
@@ -64,8 +67,11 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 	//   # Example URL
 	//   postgres://jack:secret@pg.example.com:5432/mydb?sslmode=verify-ca
 	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%v/%s?connect_timeout=%v&pool_max_conns=%v",
-		ep.User, ep.Password, ep.Host, ep.Port, ep.Schema, ep.ConnectTimeout, ep.MaxConnections)
+		"postgres://%s:%s@%s:%v/%s?connect_timeout=%v",
+		ep.User, ep.Password, ep.Host, ep.Port, ep.Schema, ep.ConnectTimeout)
+	if ep.MaxConnections != 0 {
+		connectionString += fmt.Sprintf("&pool_max_conns=%v", ep.MaxConnections)
+	}
 	poolConf, err := pgxpool.ParseConfig(connectionString)
 	if err != nil {
 		return nil
@@ -92,24 +98,25 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 		return err
 	}
 	return &crateEndpoint{
-		poolConf:     poolConf,
-		readTimeout:  time.Duration(ep.ReadTimeout) * time.Second,
-		writeTimeout: time.Duration(ep.WriteTimeout) * time.Second,
+		poolConf:      poolConf,
+		readPoolSize:  ep.ReadPoolSize,
+		writePoolSize: ep.WritePoolSize,
+		readTimeout:   time.Duration(ep.ReadTimeout) * time.Second,
+		writeTimeout:  time.Duration(ep.WriteTimeout) * time.Second,
 	}
 }
 
 func (c *crateEndpoint) endpoint() endpoint.Endpoint {
+	/**
+	 * Initialize connection pools lazily here instead of in `newCrateEndpoint()`,
+	 * so that the adapter does not crash on startup if the endpoint is unavailable.
+	**/
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		// We initialize the connection pool lazily here instead of in newCrateEndpoint() so
-		// that the adapter does not crash on startup if an endpoint is unavailable.
-		if c.pool == nil {
-			pool, err := pgxpool.NewWithConfig(ctx, c.poolConf)
-			if err != nil {
-				return nil, fmt.Errorf("error opening connection to CrateDB: %v", err)
-			}
-			c.pool = pool
-		}
 
+		// Initialize database connection pools.
+		err = c.createPools(ctx)
+
+		// Dispatch by request type.
 		switch r := request.(type) {
 		case *crateWriteRequest:
 			return nil, c.write(ctx, r)
@@ -119,6 +126,42 @@ func (c *crateEndpoint) endpoint() endpoint.Endpoint {
 			panic("unknown request type")
 		}
 	}
+}
+
+func (c *crateEndpoint) createPools(ctx context.Context) (err error) {
+	/**
+	 * Initialize two connection pools, one for read/write each.
+	**/
+	c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
+	if c.readPool == nil {
+		c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
+		if err != nil {
+			return err
+		}
+	}
+	if c.writePool == nil {
+		c.writePool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.writePoolSize)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createPool(ctx context.Context, poolConf *pgxpool.Config) (pool *pgxpool.Pool, err error) {
+	pool, err = pgxpool.NewWithConfig(ctx, poolConf)
+	if err != nil {
+		return nil, fmt.Errorf("error opening connection to CrateDB: %v", err)
+	} else {
+		return pool, nil
+	}
+}
+
+func createPoolWithPoolSize(ctx context.Context, poolConf *pgxpool.Config, maxConns int) (pool *pgxpool.Pool, err error) {
+	if maxConns != 0 {
+		poolConf.MaxConns = int32(maxConns)
+	}
+	return createPool(ctx, poolConf)
 }
 
 func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
@@ -179,7 +222,7 @@ func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
 	//
 	ctx, _ = context.WithTimeout(ctx, c.writeTimeout)
 
-	batchResults := c.pool.SendBatch(ctx, batch)
+	batchResults := c.writePool.SendBatch(ctx, batch)
 	var qerr error
 	if qerr != nil {
 		return fmt.Errorf("error executing write batch: %v", qerr)
@@ -196,7 +239,7 @@ func (c crateEndpoint) read(ctx context.Context, r *crateReadRequest) (*crateRea
 	// pgx4 implements query timeouts using context cancellation.
 	// See `write` function for more details.
 	ctx, _ = context.WithTimeout(ctx, c.readTimeout)
-	rows, err := c.pool.Query(ctx, r.stmt, nil)
+	rows, err := c.readPool.Query(ctx, r.stmt, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error executing read request query: %v", err)
 	}

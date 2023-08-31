@@ -83,9 +83,14 @@ The configuration settings (with one example endpoint) are as below:
     user: "crate"             # Username to use (default: "crate")
     password: ""              # Password to use (default: "").
     schema: ""                # Schema to use (default: "").
-    max_connections: 5        # The maximum number of concurrent connections (default: 5).
+    max_connections: 0        # The maximum number of concurrent connections (default: runtime.NumCPU()).
                               # It will get forwarded to pgx's `pool_max_conns`, and determines
-                              # the maximum number of connections in the connection pool.
+                              # the maximum number of connections in the connection pool for
+                              # both connection pools (read and write).
+    read_pool_size_max: 0     # Configure the maximum pool size for read operations individually.
+                              # (default: runtime.NumCPU())
+    write_pool_size_max: 0    # Configure the maximum pool size for write operations individually.
+                              # (default: runtime.NumCPU())
     connect_timeout: 10       # TCP connect timeout (seconds) (default: 10).
                               # It has the same meaning as libpq's `connect_timeout`.
     read_timeout: 5           # Query context timeout for read queries (seconds) (default: 5).
@@ -93,7 +98,7 @@ The configuration settings (with one example endpoint) are as below:
     enable_tls: false         # Whether to connect using TLS (default: false).
     allow_insecure_tls: false # Whether to allow insecure / invalid TLS certificates (default: false).
 
-Timeout settings
+Timeout Settings
 ----------------
 
 The unit for all values is *seconds*.
@@ -115,6 +120,18 @@ The unit for all values is *seconds*.
     query, to unblock connections in these cases.
 
     -- `Query Timeouts - Using Context Cancellation`_
+
+Connection Pool Settings
+------------------------
+
+The service uses two connection pools for communicating to the database, one of each
+for read vs. write operations. The configuration settings ``max_connections``,
+``read_pool_size_max``, and ``write_pool_size_max`` determine the maximum
+connection pool sizes, either for both pools at once, or individually.
+
+By default, when not configured otherwise, by either omitting the settings altogether,
+or using ``0`` values, ``pgx`` configures the maximum pool size using the number of CPU
+cores available to the system it is running on, by calling ``runtime.NumCPU()``.
 
 
 Prometheus configuration

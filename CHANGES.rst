@@ -9,6 +9,9 @@ Unreleased
 - Update to pgx5 library
 - Add query timeouts using context cancellation. The corresponding
   configuration settings are ``read_timeout`` and ``write_timeout``.
+- Use a different connection pool for read vs. write operations.
+  The corresponding settings to configure the maximum pool sizes
+  are ``read_pool_size_max`` and ``write_pool_size_max``.
 
 BREAKING CHANGES
 ----------------
