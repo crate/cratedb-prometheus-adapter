@@ -346,7 +346,7 @@ type endpointConfig struct {
 	EnableTLS        bool   `yaml:"enable_tls"`
 	AllowInsecureTLS bool   `yaml:"allow_insecure_tls"`
 	ConnectTimeout   int    `yaml:"connect_timeout"`
-	MaxConnections   int    `yaml:"max_connections"`
+	MaxConnections   int32  `yaml:"max_connections"`
 }
 
 type config struct {
