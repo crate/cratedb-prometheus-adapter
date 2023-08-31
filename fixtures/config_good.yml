@@ -6,6 +6,8 @@ cratedb_endpoints:
   schema: "schema1"
   max_connections: 10
   connect_timeout: 30
+  read_timeout: 60
+  write_timeout: 30
   enable_tls: false
 - host: "host2"
   port: 2
@@ -14,6 +16,8 @@ cratedb_endpoints:
   schema: "schema2"
   max_connections: 20
   connect_timeout: 30
+  read_timeout: 5
+  write_timeout: 5
   enable_tls: true
   allow_insecure_tls: false
 # Entry to test default values.
