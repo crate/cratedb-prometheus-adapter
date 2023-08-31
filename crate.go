@@ -36,8 +36,10 @@ type crateReadResponse struct {
 }
 
 type crateEndpoint struct {
-	pool     *pgxpool.Pool
-	poolConf *pgxpool.Config
+	pool         *pgxpool.Pool
+	poolConf     *pgxpool.Config
+	readTimeout  time.Duration
+	writeTimeout time.Duration
 }
 
 func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
@@ -89,7 +91,11 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 		}
 		return err
 	}
-	return &crateEndpoint{poolConf: poolConf}
+	return &crateEndpoint{
+		poolConf:     poolConf,
+		readTimeout:  time.Duration(ep.ReadTimeout) * time.Second,
+		writeTimeout: time.Duration(ep.WriteTimeout) * time.Second,
+	}
 }
 
 func (c *crateEndpoint) endpoint() endpoint.Endpoint {
@@ -139,6 +145,40 @@ func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
 		)
 	}
 
+	// pgx4 implements query timeouts using context cancellation.
+
+	// In production applications, it is *always* preferred to have timeouts for all queries:
+	// A sudden increase in throughput or a network issue can lead to queries slowing down by
+	// orders of magnitude.
+	//
+	// Slow queries block the connections that they are running on, preventing other queries
+	// from running on them. We should always set a timeout after which to cancel a running
+	// query, to unblock connections in these cases.
+	//
+	// -- https://www.sohamkamani.com/golang/sql-database/#query-timeouts---using-context-cancellation
+
+	// `Send` sends all queued queries to the server at once. If the batch is created from a `conn`
+	// Object, then *all* queries are wrapped in a transaction. The transaction can optionally be
+	// configured with `txOptions`. The context is in effect until the Batch is closed.
+	//
+	// Warning: `Send` writes all queued queries before reading any results. This can cause a
+	// deadlock if an excessive number of queries are queued. It is highly advisable to use a
+	// timeout context to protect against this possibility. Unfortunately, this excessive number
+	// can vary based on operating system, connection type (TCP or Unix domain socket), and type
+	// of query. Unix domain sockets seem to be much more susceptible to this issue than TCP
+	// connections. However, it is usually at least several thousand.
+	//
+	// The deadlock occurs when the batched queries to be sent are so large that the PostgreSQL
+	// server cannot receive it all at once. PostgreSQL received some queued queries and starts
+	// executing them. As PostgreSQL executes the queries it sends responses back. pgx will not
+	// read any of these responses until it has finished sending. Therefore, if all network
+	// buffers are full, pgx will not be able to finish sending the queries, and PostgreSQL will
+	// not be able to finish sending the responses.
+	//
+	// -- https://github.com/jackc/pgx/blob/v3.6.2/batch.go#L58-L79
+	//
+	ctx, _ = context.WithTimeout(ctx, c.writeTimeout)
+
 	batchResults := c.pool.SendBatch(ctx, batch)
 	var qerr error
 	if qerr != nil {
@@ -153,6 +193,9 @@ func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
 }
 
 func (c crateEndpoint) read(ctx context.Context, r *crateReadRequest) (*crateReadResponse, error) {
+	// pgx4 implements query timeouts using context cancellation.
+	// See `write` function for more details.
+	ctx, _ = context.WithTimeout(ctx, c.readTimeout)
 	rows, err := c.pool.Query(ctx, r.stmt, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error executing read request query: %v", err)

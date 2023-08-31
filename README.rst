@@ -73,7 +73,7 @@ To create a blueprint configuration file, run::
     ./cratedb-prometheus-adapter -config.make > config.yml
 
 If multiple endpoints are listed, the adapter will load-balance between them.
-The options (with one example endpoint) are as below:
+The configuration settings (with one example endpoint) are as below:
 
 .. code-block:: yaml
 
@@ -83,10 +83,39 @@ The options (with one example endpoint) are as below:
     user: "crate"             # Username to use (default: "crate")
     password: ""              # Password to use (default: "").
     schema: ""                # Schema to use (default: "").
-    connect_timeout: 10       # TCP connect timeout (seconds) (default: 10).
     max_connections: 5        # The maximum number of concurrent connections (default: 5).
+                              # It will get forwarded to pgx's `pool_max_conns`, and determines
+                              # the maximum number of connections in the connection pool.
+    connect_timeout: 10       # TCP connect timeout (seconds) (default: 10).
+                              # It has the same meaning as libpq's `connect_timeout`.
+    read_timeout: 5           # Query context timeout for read queries (seconds) (default: 5).
+    write_timeout: 5          # Query context timeout for write queries (seconds) (default: 5).
     enable_tls: false         # Whether to connect using TLS (default: false).
     allow_insecure_tls: false # Whether to allow insecure / invalid TLS certificates (default: false).
+
+Timeout settings
+----------------
+
+The unit for all values is *seconds*.
+
+- To adjust the TCP connection timeout, use the ``connect_timeout`` setting.
+- To adjust the query timeouts to cancel running operations, use either
+  the ``read_timeout`` and ``write_timeout`` settings.
+
+`Soham Kamani <https://github.com/sohamkamani>`_ states it well:
+
+    pgx4 implements query timeouts using context cancellation.
+
+    In production applications, it is *always* preferred to have timeouts for all queries:
+    A sudden increase in throughput or a network issue can lead to queries slowing down by
+    orders of magnitude.
+
+    Slow queries block the connections that they are running on, preventing other queries
+    from running on them. We should always set a timeout after which to cancel a running
+    query, to unblock connections in these cases.
+
+    -- `Query Timeouts - Using Context Cancellation`_
+
 
 Prometheus configuration
 ========================
@@ -151,3 +180,4 @@ start the service, and enable it to be started automatically on system boot::
 .. _config.yml: https://github.com/crate/cratedb-prometheus-adapter/blob/main/config.yml
 .. _cratedb-prometheus-adapter.default: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.default
 .. _cratedb-prometheus-adapter.service: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.service
+.. _Query Timeouts - Using Context Cancellation: https://www.sohamkamani.com/golang/sql-database/#query-timeouts---using-context-cancellation
