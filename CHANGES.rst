@@ -6,7 +6,7 @@ Unreleased
 ==========
 
 - Add support for Go 1.20 and 1.21, drop support for previous releases.
-- Update to pgx4 library
+- Update to pgx5 library
 
 BREAKING CHANGES
 ----------------
