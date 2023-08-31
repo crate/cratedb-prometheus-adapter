@@ -343,7 +343,9 @@ type endpointConfig struct {
 	User             string `yaml:"user"`
 	Password         string `yaml:"password"`
 	Schema           string `yaml:"schema"`
-	MaxConnections   int32  `yaml:"max_connections"`
+	MaxConnections   int    `yaml:"max_connections"`
+	ReadPoolSize     int    `yaml:"read_pool_size_max"`
+	WritePoolSize    int    `yaml:"write_pool_size_max"`
 	ConnectTimeout   int    `yaml:"connect_timeout"`
 	ReadTimeout      int    `yaml:"read_timeout"`
 	WriteTimeout     int    `yaml:"write_timeout"`
@@ -401,9 +403,6 @@ func loadConfig(filename string) (*config, error) {
 		}
 		if conf.Endpoints[i].User == "" {
 			conf.Endpoints[i].User = "crate"
-		}
-		if conf.Endpoints[i].MaxConnections == 0 {
-			conf.Endpoints[i].MaxConnections = 5
 		}
 		if conf.Endpoints[i].ConnectTimeout == 0 {
 			conf.Endpoints[i].ConnectTimeout = 10
