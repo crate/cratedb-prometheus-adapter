@@ -5,6 +5,8 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+- Add support for Go 1.20 and 1.21, drop support for previous releases.
+
 BREAKING CHANGES
 ----------------
 
