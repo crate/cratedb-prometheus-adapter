@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"math"
 	"path/filepath"
 	"reflect"
@@ -12,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/stretchr/testify/require"
@@ -107,11 +107,11 @@ func TestResponseToTimeseries(t *testing.T) {
 			},
 			timeseries: []*prompb.TimeSeries{
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "__name__", Value: "metric"},
-						&prompb.Label{Name: "job", Value: "j"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "__name__", Value: "metric"},
+						prompb.Label{Name: "job", Value: "j"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 1, Timestamp: 1000},
 						{Value: 2, Timestamp: 2000},
 						{Value: 3, Timestamp: 3000},
@@ -129,20 +129,20 @@ func TestResponseToTimeseries(t *testing.T) {
 			},
 			timeseries: []*prompb.TimeSeries{
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "__name__", Value: "a"},
-						&prompb.Label{Name: "job", Value: "j"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "__name__", Value: "a"},
+						prompb.Label{Name: "job", Value: "j"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 1, Timestamp: 1000},
 					},
 				},
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "__name__", Value: "b"},
-						&prompb.Label{Name: "job", Value: "j"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "__name__", Value: "b"},
+						prompb.Label{Name: "job", Value: "j"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 2, Timestamp: 1000},
 					},
 				},
@@ -159,17 +159,17 @@ func TestResponseToTimeseries(t *testing.T) {
 
 func TestWritesToCrateRequest(t *testing.T) {
 	cases := []struct {
-		series  []*prompb.TimeSeries
+		series  []prompb.TimeSeries
 		request *crateWriteRequest
 	}{
 		{
-			series: []*prompb.TimeSeries{
+			series: []prompb.TimeSeries{
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "__name__", Value: "metric"},
-						&prompb.Label{Name: "job", Value: "j"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "__name__", Value: "metric"},
+						prompb.Label{Name: "job", Value: "j"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 1, Timestamp: 1000},
 						{Value: math.Inf(1), Timestamp: 2000},
 						{Value: math.Inf(-1), Timestamp: 3000},
@@ -185,23 +185,23 @@ func TestWritesToCrateRequest(t *testing.T) {
 			},
 		},
 		{
-			series: []*prompb.TimeSeries{
+			series: []prompb.TimeSeries{
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "__name__", Value: "a"},
-						&prompb.Label{Name: "job", Value: "j"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "__name__", Value: "a"},
+						prompb.Label{Name: "job", Value: "j"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 1, Timestamp: 1000},
 					},
 				},
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "__name__", Value: "b"},
-						&prompb.Label{Name: "job", Value: "j"},
-						&prompb.Label{Name: "foo", Value: "bar"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "__name__", Value: "b"},
+						prompb.Label{Name: "job", Value: "j"},
+						prompb.Label{Name: "foo", Value: "bar"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 2, Timestamp: 1000},
 					},
 				},
@@ -214,12 +214,12 @@ func TestWritesToCrateRequest(t *testing.T) {
 			},
 		},
 		{
-			series: []*prompb.TimeSeries{
+			series: []prompb.TimeSeries{
 				{
-					Labels: []*prompb.Label{
-						&prompb.Label{Name: "\"'", Value: "\"'"},
+					Labels: []prompb.Label{
+						prompb.Label{Name: "\"'", Value: "\"'"},
 					},
-					Samples: []*prompb.Sample{
+					Samples: []prompb.Sample{
 						{Value: 1, Timestamp: 1000},
 					},
 				},
