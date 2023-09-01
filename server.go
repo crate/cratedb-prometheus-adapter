@@ -48,11 +48,11 @@ var (
 	})
 	writeCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: fmt.Sprintf("%swrite_crate_latency_seconds", *metricsExportPrefix),
-		Help: "Latency for inserts to Crate.",
+		Help: "Latency for inserts to CrateDB.",
 	})
 	writeCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: fmt.Sprintf("%swrite_crate_failed_total", *metricsExportPrefix),
-		Help: "How many inserts to Crate failed.",
+		Help: "How many inserts to CrateDB failed.",
 	})
 	readDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: fmt.Sprintf("%sread_latency_seconds", *metricsExportPrefix),
@@ -64,11 +64,11 @@ var (
 	})
 	readCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: fmt.Sprintf("%sread_crate_latency_seconds", *metricsExportPrefix),
-		Help: "Latency for selects from Crate.",
+		Help: "Latency for selects from CrateDB.",
 	})
 	readCrateErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: fmt.Sprintf("%sread_crate_failed_total", *metricsExportPrefix),
-		Help: "How many selects from Crate failed.",
+		Help: "How many selects from CrateDB failed.",
 	})
 	readSamples = prometheus.NewSummary(prometheus.SummaryOpts{
 		Name: fmt.Sprintf("%sread_timeseries_samples", *metricsExportPrefix),
@@ -102,7 +102,7 @@ func escapeLabelValue(s string) string {
 	return "'" + escaper.Replace(s) + "'"
 }
 
-// Convert a read query into a Crate SQL query.
+// Convert a read query into a CrateDB SQL query.
 func queryToSQL(q *prompb.Query) (string, error) {
 	selectors := make([]string, 0, len(q.Matchers)+2)
 	for _, m := range q.Matchers {
@@ -127,7 +127,7 @@ func queryToSQL(q *prompb.Query) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			// Crate regexes are not RE2, so there may be small semantic differences here.
+			// CrateDB regexes are not RE2, so there may be small semantic differences here.
 			if matchesEmpty {
 				selectors = append(selectors, fmt.Sprintf("(%s ~ %s OR %s IS NULL)", escapeLabelName(m.Name), escapeLabelValue(re), escapeLabelName(m.Name)))
 			} else {
@@ -247,7 +247,7 @@ func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Re
 
 	result, err := ca.runQuery(req.Queries[0])
 	if err != nil {
-		log.With("err", err).Error("Failed to run select against Crate.")
+		log.With("err", err).Error("Failed to run select against CrateDB.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -331,7 +331,7 @@ func (ca *crateDbPrometheusAdapter) handleWrite(w http.ResponseWriter, r *http.R
 	writeTimer.ObserveDuration()
 	if err != nil {
 		writeCrateErrors.Inc()
-		log.With("err", err).Error("Failed to write data to Crate.")
+		log.With("err", err).Error("Failed to write data to CrateDB.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
