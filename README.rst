@@ -6,6 +6,9 @@ CrateDB Prometheus Adapter
 
 |version| |ci-tests| |license|
 
+The `remote write`_ and `remote read`_ features of Prometheus allow transparently
+sending and receiving samples. This is primarily intended for long term storage.
+
 This is an adapter that accepts Prometheus remote read/write requests,
 and sends them to CrateDB. This allows using CrateDB as long term storage
 for Prometheus.
@@ -198,3 +201,5 @@ start the service, and enable it to be started automatically on system boot::
 .. _cratedb-prometheus-adapter.default: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.default
 .. _cratedb-prometheus-adapter.service: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.service
 .. _Query Timeouts - Using Context Cancellation: https://www.sohamkamani.com/golang/sql-database/#query-timeouts---using-context-cancellation
+.. _remote read: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_read
+.. _remote write: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
