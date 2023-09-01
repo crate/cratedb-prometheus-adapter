@@ -17,7 +17,6 @@ import (
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/lb"
 	"github.com/go-kit/log"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -248,7 +247,7 @@ func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Re
 	}
 
 	var req prompb.ReadRequest
-	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+	if err := req.Unmarshal(reqBuf); err != nil {
 		level.Error(logger).Log("msg", "Failed to unmarshal body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -271,7 +270,7 @@ func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Re
 			{Timeseries: result},
 		},
 	}
-	data, err := proto.Marshal(&resp)
+	data, err := resp.Marshal()
 	if err != nil {
 		level.Error(logger).Log("msg", "Failed to marshal response", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -333,7 +332,7 @@ func (ca *crateDbPrometheusAdapter) handleWrite(w http.ResponseWriter, r *http.R
 	}
 
 	var req prompb.WriteRequest
-	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+	if err := req.Unmarshal(reqBuf); err != nil {
 		level.Error(logger).Log("msg", "Failed to unmarshal body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
