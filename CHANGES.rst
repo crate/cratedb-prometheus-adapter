@@ -14,6 +14,7 @@ Unreleased
   are ``read_pool_size_max`` and ``write_pool_size_max``.
 - Use a DSN-style connection string for talking to pgx5
 - Update Prometheus libraries (client: 1.16, server: 2.46)
+- Update Protocol Buffers libraries (google.golang.org/protobuf 1.31)
 
 BREAKING CHANGES
 ----------------

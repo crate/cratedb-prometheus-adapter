@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/go-kit/kit v0.13.0
 	github.com/go-kit/log v0.2.1
-	github.com/golang/protobuf v1.5.3
 	github.com/golang/snappy v0.0.4
 	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v5 v5.4.3
@@ -13,6 +12,11 @@ require (
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prometheus v0.46.0
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/golang/protobuf v1.5.3 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 )
 
 require (
@@ -37,6 +41,5 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
