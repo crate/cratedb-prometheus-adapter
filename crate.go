@@ -4,11 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/common/model"
 )

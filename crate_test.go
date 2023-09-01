@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/stretchr/testify/require"
 	"runtime"
 	"testing"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/stretchr/testify/require"
 )
 
 var CPU_COUNT = int32(runtime.NumCPU())
