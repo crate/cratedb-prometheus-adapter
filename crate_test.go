@@ -12,9 +12,11 @@ var CPU_COUNT = int32(runtime.NumCPU())
 
 func TestNewCrateEndpoint(t *testing.T) {
 	conf := builtinConfig()
+	conf.Endpoints[0].Password = "foobar+&%"
+	conf.Endpoints[0].Schema = "testdrive"
 	endpoint := newCrateEndpoint(&conf.Endpoints[0])
 	require.Equal(t,
-		"postgres://crate:@localhost:5432/?connect_timeout=10",
+		"host=localhost port=5432 user=crate password=foobar+&% database=testdrive connect_timeout=10",
 		endpoint.poolConf.ConnString(),
 	)
 	require.GreaterOrEqual(t, endpoint.poolConf.MaxConns, CPU_COUNT)
@@ -90,7 +92,7 @@ func TestPoolsDefault(t *testing.T) {
 	endpoint.createPools(ctx)
 	require.IsType(t, &pgxpool.Pool{}, endpoint.readPool)
 	require.Equal(t,
-		"postgres://crate:@localhost:5432/?connect_timeout=10",
+		"host=localhost port=5432 user=crate connect_timeout=10",
 		endpoint.poolConf.ConnString(),
 	)
 	require.GreaterOrEqual(t, endpoint.readPool.Config().MaxConns, CPU_COUNT)
@@ -108,7 +110,7 @@ func TestPoolsWithMaxConnections(t *testing.T) {
 	endpoint.createPools(ctx)
 	require.IsType(t, &pgxpool.Pool{}, endpoint.readPool)
 	require.Equal(t,
-		"postgres://crate:@localhost:5432/?connect_timeout=10&pool_max_conns=42",
+		"host=localhost port=5432 user=crate connect_timeout=10 pool_max_conns=42",
 		endpoint.poolConf.ConnString(),
 	)
 	require.Equal(t, int32(42), endpoint.readPool.Config().MaxConns)
@@ -127,7 +129,7 @@ func TestPoolsWithIndividualPoolSizes(t *testing.T) {
 	endpoint.createPools(ctx)
 	require.IsType(t, &pgxpool.Pool{}, endpoint.readPool)
 	require.Equal(t,
-		"postgres://crate:@localhost:5432/?connect_timeout=10",
+		"host=localhost port=5432 user=crate connect_timeout=10",
 		endpoint.poolConf.ConnString(),
 	)
 	require.Equal(t, int32(11), endpoint.readPool.Config().MaxConns)
@@ -146,7 +148,7 @@ func TestPoolsWithMaxConnectionsAndIndividualPoolSizes(t *testing.T) {
 	endpoint.createPools(ctx)
 	require.IsType(t, &pgxpool.Pool{}, endpoint.readPool)
 	require.Equal(t,
-		"postgres://crate:@localhost:5432/?connect_timeout=10&pool_max_conns=5",
+		"host=localhost port=5432 user=crate connect_timeout=10 pool_max_conns=5",
 		endpoint.poolConf.ConnString(),
 	)
 	require.Equal(t, int32(40), endpoint.readPool.Config().MaxConns)
