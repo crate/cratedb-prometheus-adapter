@@ -12,6 +12,7 @@ Unreleased
 - Use a different connection pool for read vs. write operations.
   The corresponding settings to configure the maximum pool sizes
   are ``read_pool_size_max`` and ``write_pool_size_max``.
+- Use a DSN-style connection string for talking to pgx5
 
 BREAKING CHANGES
 ----------------

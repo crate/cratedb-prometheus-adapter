@@ -353,6 +353,33 @@ type endpointConfig struct {
 	AllowInsecureTLS bool   `yaml:"allow_insecure_tls"`
 }
 
+func (ep *endpointConfig) toDSN() string {
+	// Convert endpointConfig data to libpq-compatible DSN-style connection string.
+	var params []string
+	if ep.Host != "" {
+		params = append(params, fmt.Sprintf("host=%s", ep.Host))
+	}
+	if ep.Port != 0 {
+		params = append(params, fmt.Sprintf("port=%v", ep.Port))
+	}
+	if ep.User != "" {
+		params = append(params, fmt.Sprintf("user=%s", ep.User))
+	}
+	if ep.Password != "" {
+		params = append(params, fmt.Sprintf("password=%s", ep.Password))
+	}
+	if ep.Schema != "" {
+		params = append(params, fmt.Sprintf("database=%s", ep.Schema))
+	}
+	if ep.ConnectTimeout != 0 {
+		params = append(params, fmt.Sprintf("connect_timeout=%v", ep.ConnectTimeout))
+	}
+	if ep.MaxConnections != 0 {
+		params = append(params, fmt.Sprintf("pool_max_conns=%v", ep.MaxConnections))
+	}
+	return strings.Join(params, " ")
+}
+
 type config struct {
 	Endpoints []endpointConfig `yaml:"cratedb_endpoints"`
 }

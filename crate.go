@@ -66,13 +66,9 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 	//
 	//   # Example URL
 	//   postgres://jack:secret@pg.example.com:5432/mydb?sslmode=verify-ca
-	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%v/%s?connect_timeout=%v",
-		ep.User, ep.Password, ep.Host, ep.Port, ep.Schema, ep.ConnectTimeout)
-	if ep.MaxConnections != 0 {
-		connectionString += fmt.Sprintf("&pool_max_conns=%v", ep.MaxConnections)
-	}
-	poolConf, err := pgxpool.ParseConfig(connectionString)
+
+	// Create configuration object from DSN-style connection string.
+	poolConf, err := pgxpool.ParseConfig(ep.toDSN())
 	if err != nil {
 		return nil
 	}
