@@ -165,22 +165,14 @@ func (c crateEndpoint) write(ctx context.Context, r *crateWriteRequest) error {
 	for _, a := range r.rows {
 		batch.Queue(
 			"write_statement",
-			[]interface{}{
-				a.labels,
-				a.labelsHash,
-				// TODO: Find non-string way of encoding timestamps.
-				a.timestamp.Format("2006-01-02 15:04:05.000-07"),
-				a.value,
-				a.valueRaw,
-			},
-			[]pgtype.OID{
-				pgtype.JSONOID,
-				pgtype.VarcharOID,
-				pgtype.TimestamptzOID,
-				pgtype.Float8OID,
-				pgtype.Int8OID,
-			},
-			nil,
+			a.labels,
+			a.labelsHash,
+			// TODO: Find non-string way of encoding timestamps.
+			//       Maybe it is more efficient to submit timestamp as Unixtime,
+			//       instead of converting it into a string?
+			a.timestamp.Format("2006-01-02 15:04:05.000-07"),
+			a.value,
+			a.valueRaw,
 		)
 	}
 
