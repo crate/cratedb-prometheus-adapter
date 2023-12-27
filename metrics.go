@@ -61,4 +61,58 @@ func setupMetrics() {
 	prometheus.MustRegister(readSamples)
 	prometheus.MustRegister(readCrateDuration)
 	prometheus.MustRegister(readCrateErrors)
+	prometheus.MustRegister(metricsCollector)
+}
+
+type pgxPoolCollector struct {
+	/**
+	 * Use sub collectors to prevent "duplicate metrics collector registration attempted",
+	 * even if two instances of `NewPgxPoolStatsCollector` are actually unique, when using
+	 * the vanilla variant:
+	 * prometheus.MustRegister(pgxpool_prometheus.NewPgxPoolStatsCollector(pool, "database"))
+	 *
+	 * -- https://github.com/prometheus/client_golang/issues/633#issuecomment-521669423
+	**/
+	read, write prometheus.Collector
+}
+
+func (c *pgxPoolCollector) Describe(descs chan<- *prometheus.Desc) {
+	//TODO implement me
+	//panic("implement me")
+	//c.read.Describe(descs)
+}
+
+func (c *pgxPoolCollector) Collect(metrics chan<- prometheus.Metric) {
+	//TODO implement me
+	//panic("implement me")
+	c.read.Collect(metrics)
+	//metrics <- c.read.Collect()
+}
+
+/*
+func (c *pgxPoolCollector) Collect3(ctx *ScrapeContext, ch chan<- prometheus.Metric) error {
+	if desc, err := c.collectADCSCounters(ctx, ch); err != nil {
+		_ = level.Error(c.logger).Log("msg", "failed collecting ADCS metrics", "desc", desc, "err", err)
+		return err
+	}
+	return nil
+}
+
+func (m *pgxPoolCollector) Collect2(metrics chan<- prometheus.Metric) {
+	//TODO implement me
+	//panic("implement me")
+	//chan<- m.read.Collect()
+}
+*/
+
+func (m *pgxPoolCollector) Register(r prometheus.Registerer) error {
+	// Register each sub-collector
+	r.MustRegister(m.read)
+	r.MustRegister(m.write)
+	return nil
+}
+func (m *pgxPoolCollector) Unregister(r prometheus.Registerer) {
+	// Unregister each sub-collector
+	r.Unregister(m.read)
+	r.Unregister(m.write)
 }

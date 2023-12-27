@@ -38,6 +38,7 @@ var (
 
 // Module-wide `logger` variable, initialized by `setupLogging()`.
 var logger log.Logger
+var metricsCollector *pgxPoolCollector
 
 func init() {
 	setupLogging()

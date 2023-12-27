@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	pgxpool_prometheus "github.com/cmackenzie1/pgxpool-prometheus"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -43,6 +44,7 @@ type crateEndpoint struct {
 	writeTimeout  time.Duration
 	readPool      *pgxpool.Pool
 	writePool     *pgxpool.Pool
+	metricsCollector *pgxPoolCollector
 }
 
 func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
@@ -87,18 +89,31 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 	// a connection from the pool manually and prepare it there before use.
 	// https://github.com/jackc/pgx/issues/791#issuecomment-660508309
 	poolConf.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		_, err := conn.Prepare(ctx, "write_statement", crateWriteStatement)
+
+		// Work around errors when querying for non-existent labels.
+		// level=error msg="Failed to run select against CrateDB"
+		// err="error executing read request query: ERROR: Column labels['foo'] unknown (SQLSTATE 42703)"
+		_, err := conn.Exec(ctx, "SET error_on_unknown_object_key=false;")
+		if err != nil {
+			return fmt.Errorf("error running initialization statements: %v", err)
+		}
+
+		// Prepare SQL statement used for writing.
+		_, err = conn.Prepare(ctx, "write_statement", crateWriteStatement)
 		if err != nil {
 			return fmt.Errorf("error preparing write statement: %v", err)
 		}
+
 		return err
 	}
+	metricsCollector := &pgxPoolCollector{}
 	return &crateEndpoint{
 		poolConf:      poolConf,
 		readPoolSize:  ep.ReadPoolSize,
 		writePoolSize: ep.WritePoolSize,
 		readTimeout:   time.Duration(ep.ReadTimeout) * time.Second,
 		writeTimeout:  time.Duration(ep.WriteTimeout) * time.Second,
+		metricsCollector: metricsCollector,
 	}
 }
 
@@ -128,18 +143,19 @@ func (c *crateEndpoint) createPools(ctx context.Context) (err error) {
 	/**
 	 * Initialize two connection pools, one for read/write each.
 	**/
-	c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
 	if c.readPool == nil {
 		c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
 		if err != nil {
 			return err
 		}
+		c.metricsCollector.read = pgxpool_prometheus.NewPgxPoolStatsCollector(c.readPool, "read")
 	}
 	if c.writePool == nil {
 		c.writePool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.writePoolSize)
 		if err != nil {
 			return err
 		}
+		c.metricsCollector.write = pgxpool_prometheus.NewPgxPoolStatsCollector(c.writePool, "write")
 	}
 	return nil
 }
