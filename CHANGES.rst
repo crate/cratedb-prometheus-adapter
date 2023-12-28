@@ -5,39 +5,36 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
-- Add support for Go 1.20 and 1.21, drop support for previous releases.
-- Update to pgx5 library
+
+CHANGES
+-------
+- Accept invoking the program without default configuration file ``config.yml``
+  In this case, the program will fall back to the builtin defaults, essentially
+  connecting to ``localhost:5432`` with username ``crate``.
 - Add query timeouts using context cancellation. The corresponding
   configuration settings are ``read_timeout`` and ``write_timeout``.
 - Use a different connection pool for read vs. write operations.
   The corresponding settings to configure the maximum pool sizes
   are ``read_pool_size_max`` and ``write_pool_size_max``.
-- Use a DSN-style connection string for talking to pgx5
-- Update Prometheus libraries (client: 1.16, server: 2.46)
+- Accept invocation without default configuration file ``config.yml``.
+- Add command line option ``-config.make`` to print a blueprint configuration
+  file to stdout.
+- Use a DSN-style connection string for talking to pgx5.
+- Add program version to startup log message.
+
+DEPENDENCIES
+------------
+- Add support for Go 1.20 and 1.21, drop support for previous releases
+- Update dependency packages across the board to their latest or minor patch releases
+- Update Prometheus libraries (client: 1.18, server: 2.48)
 - Update Protocol Buffers libraries (google.golang.org/protobuf 1.31)
+- Update to pgx5 library
 
 BREAKING CHANGES
 ----------------
-
 - This release removes the default value for the ``-config.file`` command line
   option, which was ``config.yml``. When the option is omitted, the service
   will use the built-in settings, connecting to CrateDB on ``localhost:5432``.
-
-CHANGES
--------
-
-- Add support for Go 1.18 and 1.19, drop support for previous releases.
-
-- Update dependency packages across the board to their latest or minor patch releases.
-
-- Accept invoking the program without default configuration file ``config.yml``.
-  In this case, the program will fall back to the builtin defaults, essentially
-  connecting to ``localhost:5432`` with username ``crate``.
-
-- Add command line option ``-config.make`` to print a blueprint configuration
-  file to stdout.
-
-- Add program version to startup log message
 
 
 2021-05-04 0.4.0
