@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/cmackenzie1/pgxpool-prometheus v0.5.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
