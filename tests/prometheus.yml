@@ -1,0 +1,75 @@
+global:
+  # By default, scrape targets every 15 seconds.
+  scrape_interval: 15s
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    subsystem: 'database'
+
+# Scrape configurations for two endpoints: It scrapes metrics from both
+# Prometheus, and from CrateDB Prometheus Adapter.
+
+# The job name will be added as a label `job=<job_name>` to any
+# time-series scraped from the corresponding configuration item.
+
+# `scrape_interval` overrides the global default scrape interval for
+# individual targets. For testing purposes, this value is tuned down
+# to permit fast metrics convergence.
+scrape_configs:
+
+  - job_name: 'prometheus'
+    scrape_interval: 250ms
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'cratedb'
+    scrape_interval: 250ms
+    static_configs:
+      - targets: ['host.docker.internal:9268']
+
+remote_write:
+
+  # The URL of the endpoint to send samples to.
+
+  # When Prometheus is running on Docker, and the Prometheus adapter on localhost.
+  - url: http://host.docker.internal:9268/write
+
+  # When the Prometheus adapter is also running on Docker.
+  #- url: http://cratedb-prometheus-adapter:9268/write
+
+  # When the Prometheus adapter is running on localhost.
+  #- url: http://localhost:9268/write
+
+    # Timeout for requests to the remote write endpoint.
+    remote_timeout: 2s
+
+    # Configure the sending of series metadata to remote storage.
+    metadata_config:
+      # Configure how frequently metric metadata is sent to remote storage.
+      send_interval: 5ms
+
+    # Configure the queue used to write to remote storage.
+    # For testing purposes, the deadline value is tuned down to avoid buffering.
+    queue_config:
+      # Maximum time a sample will wait in buffer.
+      batch_send_deadline: 1ms
+      # Minimum and maximum number of shards, i.e. amount of concurrency.
+      min_shards: 1
+      max_shards: 1
+      # Initial and maximum retry delay. `min` gets doubled for every retry.
+      min_backoff: 1ms
+      max_backoff: 1ms
+
+remote_read:
+  # When Prometheus is running on Docker, and the Prometheus adapter on localhost.
+  - url: http://host.docker.internal:9268/read
+
+  # When the Prometheus adapter is also running on Docker.
+  #- url: http://cratedb-prometheus-adapter:9268/read
+
+  # When the Prometheus adapter is running on localhost.
+  #- url: http://localhost:9268/read
+
+    # Timeout for requests to the remote read endpoint.
+    remote_timeout: 2s

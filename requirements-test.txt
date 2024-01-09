@@ -1,0 +1,7 @@
+crash
+cratedb-toolkit==0.0.2
+pueblo[proc]==0.0.4
+prometheus-api-client<0.6
+pytest<8
+pytest-env<2
+requests<3
