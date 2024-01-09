@@ -42,10 +42,39 @@ To build the ``cratedb-prometheus-adapter`` executable, run::
 
    go build
 
+Unit tests
+==========
+
 To run the test suite, execute::
 
-   go test -v
+    go test -v
 
+For running the linter, invoke::
+
+    gofmt -l -d .
+
+To format the files, according to what the linter says, run::
+
+    gofmt -w .
+
+Integration tests
+=================
+
+Run CrateDB and Prometheus::
+
+    docker compose --file tests/docker-compose.yaml up
+
+Run integration tests::
+
+    pytest
+
+Run services in background (FYI)::
+
+    # Start.
+    docker compose --file tests/docker-compose.yaml up --detach
+
+    # Inspect logs.
+    docker compose --file tests/docker-compose.yaml logs --follow
 
 Maintaining dependencies
 ========================
@@ -121,10 +150,15 @@ from.
 To expose the ``/read``, ``/write`` and ``/metrics`` endpoints, the port
 ``9268`` must be published::
 
-   docker run --rm -ti -p 9268:9268 crate/cratedb-prometheus-adapter
+   docker run --rm -it \
+   --publish=9268:9268 \
+   crate/cratedb-prometheus-adapter
 
 Since the default configuration would use ``localhost`` as CrateDB endpoint, a
 ``config.yml`` with the correct configuration needs to be mounted on
 ``/etc/cratedb-prometheus-adapter/config.yml``::
 
-   docker run --rm -ti -p 9268:9268 -v $(pwd)/config.yml:/etc/cratedb-prometheus-adapter/config.yaml crate/cratedb-prometheus-adapter
+   docker run --rm -it \
+   --publish=9268:9268 --volume=$(pwd)/config.yml:/etc/cratedb-prometheus-adapter/config.yaml \
+   crate/cratedb-prometheus-adapter
+

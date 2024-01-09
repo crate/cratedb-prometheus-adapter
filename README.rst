@@ -33,7 +33,7 @@ variants. You can choose freely which fits your needs best.
 Usage
 =====
 
-Create the following table in your CrateDB database:
+Create the following table in your CrateDB database using `ddl.sql`_:
 
 .. code-block:: sql
 
@@ -63,6 +63,10 @@ default configuration. More details how to individually configure it are
 outlined within the next section.
 
 To display all available command line options and flags, use the ``-h`` flag.
+
+In order to inquire the ``/metrics`` HTTP endpoint, use an HTTP client like ``curl``::
+
+    curl localhost:9268/metrics
 
 CrateDB adapter endpoint configuration
 ======================================
@@ -200,6 +204,7 @@ start the service, and enable it to be started automatically on system boot::
 .. _config.yml: https://github.com/crate/cratedb-prometheus-adapter/blob/main/config.yml
 .. _cratedb-prometheus-adapter.default: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.default
 .. _cratedb-prometheus-adapter.service: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.service
+.. _ddl.sql: https://github.com/crate/cratedb-prometheus-adapter/blob/main/sql/ddl.sql
 .. _Query Timeouts - Using Context Cancellation: https://www.sohamkamani.com/golang/sql-database/#query-timeouts---using-context-cancellation
 .. _remote read: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_read
 .. _remote write: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write

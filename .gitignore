@@ -1,4 +1,7 @@
 .DS_Store
 .idea
+.venv
 build
 cratedb-prometheus-adapter
+__pycache__
+*.pyc
