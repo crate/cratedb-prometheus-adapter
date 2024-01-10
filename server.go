@@ -37,11 +37,11 @@ var (
 
 	writeDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: fmt.Sprintf("%swrite_latency_seconds", *metricsExportPrefix),
-		Help: "How long it took us to respond to write requests.",
+		Help: "How long it took to respond to write requests.",
 	})
 	writeErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: fmt.Sprintf("%swrite_failed_total", *metricsExportPrefix),
-		Help: "How many write request we returned errors for.",
+		Help: "How many write request returned errors.",
 	})
 	writeSamples = prometheus.NewSummary(prometheus.SummaryOpts{
 		Name: fmt.Sprintf("%swrite_timeseries_samples", *metricsExportPrefix),
@@ -57,11 +57,11 @@ var (
 	})
 	readDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: fmt.Sprintf("%sread_latency_seconds", *metricsExportPrefix),
-		Help: "How long it took us to respond to read requests.",
+		Help: "How long it took to respond to read requests.",
 	})
 	readErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: fmt.Sprintf("%sread_failed_total", *metricsExportPrefix),
-		Help: "How many read requests we returned errors for.",
+		Help: "How many read requests returned errors.",
 	})
 	readCrateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: fmt.Sprintf("%sread_crate_latency_seconds", *metricsExportPrefix),
@@ -216,6 +216,7 @@ func (ca *crateDbPrometheusAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSer
 		return nil, err
 	}
 
+	level.Debug(logger).Log("msg", "runQuery", "stmt", query)
 	request := &crateReadRequest{stmt: query}
 
 	timer := prometheus.NewTimer(readCrateDuration)
@@ -261,8 +262,8 @@ func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Re
 
 	result, err := ca.runQuery(req.Queries[0])
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to run select against CrateDB", "err", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		level.Warn(logger).Log("msg", "Failed to run select against CrateDB", "err", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	resp := prompb.ReadResponse{
