@@ -1,12 +1,16 @@
 name: Tests
 
 on:
+  pull_request: ~
   push:
     branches: [ main ]
-  pull_request: ~
 
   # Allow job to be triggered manually.
   workflow_dispatch:
+
+  # Run job each night after CrateDB nightly has been published.
+  schedule:
+    - cron: '0 3 * * *'
 
 # Cancel in-progress jobs when pushing to the same branch.
 concurrency:
