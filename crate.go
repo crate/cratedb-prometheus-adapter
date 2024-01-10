@@ -227,7 +227,7 @@ func (c crateEndpoint) read(ctx context.Context, r *crateReadRequest) (*crateRea
 	// pgx4 implements query timeouts using context cancellation.
 	// See `write` function for more details.
 	ctx, _ = context.WithTimeout(ctx, c.readTimeout)
-	rows, err := c.readPool.Query(ctx, r.stmt, nil)
+	rows, err := c.readPool.Query(ctx, r.stmt)
 	if err != nil {
 		return nil, fmt.Errorf("error executing read request query: %v", err)
 	}
