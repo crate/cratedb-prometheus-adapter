@@ -64,16 +64,26 @@ Run CrateDB and Prometheus::
 
     docker compose --file tests/docker-compose.yaml up
 
+Set up Python sandbox::
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements-test.txt
+
 Run integration tests::
 
     pytest
 
-Run services in background (FYI)::
+Ad hoc deployment
+=================
 
-    # Start.
+You can also use the Docker Compose service definition to run both CrateDB
+and Prometheus in the background, by using DC's ``--detach`` option::
+
     docker compose --file tests/docker-compose.yaml up --detach
 
-    # Inspect logs.
+Then, for inspecting the log output of the background services, use this command::
+
     docker compose --file tests/docker-compose.yaml logs --follow
 
 Maintaining dependencies
