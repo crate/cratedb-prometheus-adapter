@@ -1,6 +1,4 @@
 import os
-import time
-from pprint import pprint
 from unittest import mock
 
 import pytest
@@ -103,7 +101,7 @@ def test_verify_write_activity(prometheus_client):
     assert value > 1_000
 
 
-def test_verify_read_activity(prometheus_client, flush_database, cratedb_client):
+def test_verify_read_activity(prometheus_client, flush_database):
     """
     Verify the read-path works well.
     """
@@ -127,6 +125,5 @@ def test_verify_read_activity(prometheus_client, flush_database, cratedb_client)
     result = prometheus_client.get_current_metric_value(
         metric_name="cratedb_prometheus_adapter_read_timeseries_samples_sum"
     )
-    pprint(result)
     value = int(result[0]["value"][1])
     assert value >= 6
