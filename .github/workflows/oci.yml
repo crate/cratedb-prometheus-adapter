@@ -8,6 +8,8 @@
 name: OCI
 
 on:
+  pull_request:
+    branches: [ main ]
   push:
     tags:
       - '*.*.*'
