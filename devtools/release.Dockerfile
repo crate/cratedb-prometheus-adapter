@@ -3,7 +3,7 @@
 # Run release archive builder within Docker container.
 #
 
-FROM golang:1.16
+FROM golang:1.21
 
 RUN apt-get update && apt-get --yes install zip
 
