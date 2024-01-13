@@ -5,15 +5,19 @@
 # https://github.com/crazy-max/ghaction-docker-meta
 # https://github.com/docker/build-push-action
 # https://github.com/MarcelCoding/luna/blob/main/.github/workflows/ci.yaml
-name: Release
+name: OCI
 
 on:
-  schedule:
-    - cron: '0 10 * * *' # everyday at 10am
   push:
     tags:
       - '*.*.*'
+
+  # Allow job to be triggered manually.
   workflow_dispatch:
+
+  # Build nightlies.
+  schedule:
+    - cron: '0 5 * * *'
 
 env:
   GHCR_IMAGE_NAME: crate/cratedb-prometheus-adapter

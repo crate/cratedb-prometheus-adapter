@@ -1,0 +1,25 @@
+# Stage builds through GitHub Actions (GHA).
+name: Builds
+
+on:
+  pull_request: ~
+  push:
+    branches: [ main ]
+
+  # Allow job to be triggered manually.
+  workflow_dispatch:
+
+  # Run builds each night.
+  schedule:
+    - cron: '0 5 * * *'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Acquire sources
+        uses: actions/checkout@v4
+
+      - name: Run release job
+        run: ./devtools/release.sh
