@@ -11,7 +11,7 @@ rm build/*
 NAME="cratedb-prometheus-adapter"
 
 # Use most recent git tag as version number.
-# TODO: Should this be made more elaborate?
+# TODO: Should this be made more elaborate, to also account for patch and nightly releases?
 VERSION="$(git tag | tail -n1)"
 
 # Build program for multiple architectures.
