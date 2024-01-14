@@ -87,6 +87,15 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 	// a connection from the pool manually and prepare it there before use.
 	// https://github.com/jackc/pgx/issues/791#issuecomment-660508309
 	poolConf.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+
+		// Switch to different database schema when requested.
+		if ep.Schema != "" {
+			_, err := conn.Exec(ctx, fmt.Sprintf("SET search_path TO '%s';", ep.Schema))
+			if err != nil {
+				return fmt.Errorf("error setting search path: %v", err)
+			}
+		}
+
 		_, err := conn.Prepare(ctx, "write_statement", crateWriteStatement)
 		if err != nil {
 			return fmt.Errorf("error preparing write statement: %v", err)

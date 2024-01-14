@@ -82,7 +82,7 @@ def cratedb_prometheus_adapter(reset_database, cratedb_client, flush_database):
     Start the CrateDB Prometheus Adapter.
     """
 
-    command = "go run ."
+    command = "go run . -config.file tests/cpa-config.yml"
     with process(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as daemon:
         # Give the server time to start.
         time.sleep(2)

@@ -7,6 +7,7 @@ Unreleased
 
 - Packaging: Re-add compatibility with glibc 2.31,
   by building on ``golang:1.20-bullseye``.
+- Fixed use of ``schema`` configuration setting, it was not honored.
 
 
 2024-01-12 0.5.0
