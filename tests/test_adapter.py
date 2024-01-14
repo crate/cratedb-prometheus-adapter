@@ -88,7 +88,7 @@ def test_verify_no_failures(prometheus_client):
         result = prometheus_client.get_metric_aggregation(
             failed_total_attribute, operations=["sum"]
         )
-        assert result == {"sum": 0.0}
+        assert result == {"sum": 0.0}, f"{failed_total_attribute} tracked {result['sum']} errors"
 
 
 def test_verify_write_activity(prometheus_client):

@@ -1,0 +1,20 @@
+cratedb_endpoints:
+- host: "localhost"         # Host to connect to (default: "localhost").
+  port: 5432                # Port to connect to (default: 5432).
+  user: "crate"             # Username to use (default: "crate")
+  password: ""              # Password to use (default: "").
+  schema: "testdrive"       # Schema to use (default: "").
+  max_connections: 0        # The maximum number of concurrent connections (default: runtime.NumCPU()).
+                            # It will get forwarded to pgx's `pool_max_conns`, and determines
+                            # the maximum number of connections in the connection pool for
+                            # both connection pools (read and write).
+  read_pool_size_max: 0     # Configure the maximum pool size for read operations individually.
+                            # (default: runtime.NumCPU())
+  write_pool_size_max: 0    # Configure the maximum pool size for write operations individually.
+                            # (default: runtime.NumCPU())
+  connect_timeout: 10       # TCP connect timeout (seconds) (default: 10).
+                            # It has the same meaning as libpq's `connect_timeout`.
+  read_timeout: 5           # Query context timeout for read queries (seconds) (default: 5).
+  write_timeout: 5          # Query context timeout for write queries (seconds) (default: 5).
+  enable_tls: false         # Whether to connect using TLS (default: false).
+  allow_insecure_tls: false # Whether to allow insecure / invalid TLS certificates (default: false).
