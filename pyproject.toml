@@ -12,7 +12,7 @@ addopts = """
 env = [
     "CRATEDB_CONNECTION_STRING=crate://crate@localhost/?ssl=false",
     "CRATEDB_PROMETHEUS_ADAPTER_METRICS_URL=http://localhost:9268/metrics",
-    "PROMETHEUS_URL=http://localhost:9090/",
+    "PROMETHEUS_URL=http://localhost:9090",
 ]
 
 log_level = "DEBUG"
