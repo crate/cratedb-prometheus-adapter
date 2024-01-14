@@ -8,9 +8,14 @@
   - https://prometheus.io/docs/prometheus/latest/querying/examples/
 - Expose metrics about both database connection pools
   https://github.com/crate/cratedb-prometheus-adapter/pull/105
- 
+
 ## Iteration +2
 - Document how to connect to CrateDB Cloud
+- Log flooding:
+  ```log
+  ts=2024-01-14T00:27:24.941Z caller=server.go:349 level=error msg="Failed to write data to CrateDB" err="error closing write batch: error preparing write statement: ERROR: Relation 'metrics' unknown (SQLSTATE 42P01)"
+  ```
+- Implement "Subquery": https://prometheus.io/docs/prometheus/latest/querying/examples/#subquery
 - Improve documentation
   https://community.crate.io/t/storing-long-term-metrics-with-prometheus-in-cratedb/1012
 
