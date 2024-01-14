@@ -1,0 +1,34 @@
+version: '3.0'
+
+services:
+
+  cratedb:
+    image: crate/crate:latest
+    ports:
+      - "4200:4200/tcp"
+      - "5432:5432/tcp"
+
+    # Make `host.docker.internal` work on Linux.
+    # https://stackoverflow.com/a/67158212
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  prometheus:
+    image: prom/prometheus:main
+    ports:
+      - "9090:9090/tcp"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+    # Make `host.docker.internal` work on Linux.
+    # https://stackoverflow.com/a/67158212
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  cratedb-version:
+    image: crate/crate:nightly
+    command: -version
+
+  prometheus-version:
+    image: prom/prometheus:main
+    command: --version
