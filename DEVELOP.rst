@@ -10,7 +10,7 @@ Building from source
 ====================
 
 To build the CrateDB Prometheus Adapter from source, you need to have a working
-Go environment with **Golang version 1.16** installed.
+Go environment with a recent version of Golang installed.
 
 Use the ``go`` tool to download and install the ``cratedb-prometheus-adapter``
 executable into your ``GOPATH``::
@@ -18,8 +18,8 @@ executable into your ``GOPATH``::
    go get github.com/crate/cratedb-prometheus-adapter
 
 
-Setup sandbox
-=============
+Set up Sandbox
+==============
 
 For working on the source code, it is advised to setup a development sandbox.
 To start things off, clone the repository and change into the newly checked out
@@ -74,17 +74,58 @@ Run integration tests::
 
     pytest
 
-Ad hoc deployment
-=================
+Sandbox Deployment
+==================
 
-You can also use the Docker Compose service definition to run both CrateDB
-and Prometheus in the background, by using DC's ``--detach`` option::
+You can also use a Docker Compose service definition to run both CrateDB
+and Prometheus on your workstation, for evaluation and testing purposes.
 
-    docker compose --file tests/docker-compose.yaml up --detach
+The setup will sample metrics each five seconds, for both ``prometheus`` and
+``cratedb`` collection jobs::
 
-Then, for inspecting the log output of the background services, use this command::
+    docker compose --file sandbox/docker-compose.yaml up
 
-    docker compose --file tests/docker-compose.yaml logs --follow
+.. note::
+
+    Please note that the Docker Compose configuration for the integration
+    testing harness is not suitable for regular operations, because it uses
+    a very high sampling rate. As such, it will significantly consume disk
+    space when it is run for a longer time.
+
+Provision database schema::
+
+    crash < sql/ddl.sql
+
+This currently needs to be accompanied by running the Prometheus Adapter
+service on your workstation, like::
+
+    go run .
+
+Navigate to Prometheus UI, and verify that both endpoints are connected::
+
+    open http://localhost:9090/targets
+
+Set up Python sandbox::
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements-test.txt
+
+Submit Prometheus query expressions and display results::
+
+    python sandbox/promquery.py
+
+Background Services
+-------------------
+
+In order to start the services in the background, use DC's ``--detach``
+option::
+
+    docker compose --file sandbox/docker-compose.yaml up --detach
+
+Then, for inspecting the log output of the background services, run::
+
+    docker compose --file sandbox/docker-compose.yaml logs --follow
 
 Maintaining dependencies
 ========================
