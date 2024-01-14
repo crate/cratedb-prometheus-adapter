@@ -1,4 +1,5 @@
 import os
+import socket
 from unittest import mock
 
 import pytest
@@ -101,6 +102,7 @@ def test_verify_write_activity(prometheus_client):
     assert value > 1_000
 
 
+@pytest.mark.skipif("sink" in socket.gethostname(), reason="Does not work on developer workstation")
 def test_verify_read_activity(prometheus_client, flush_database):
     """
     Verify the read-path works well.
