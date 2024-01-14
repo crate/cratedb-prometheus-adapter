@@ -27,6 +27,8 @@ def adapter_metrics():
         "cratedb_prometheus_adapter_read_timeseries_samples_count",
         "cratedb_prometheus_adapter_write_crate_failed_total",
         "cratedb_prometheus_adapter_write_crate_latency_seconds_bucket",
+        "cratedb_prometheus_adapter_write_crate_latency_seconds_sum",
+        "cratedb_prometheus_adapter_write_crate_latency_seconds_count",
         "cratedb_prometheus_adapter_write_failed_total",
         "cratedb_prometheus_adapter_write_latency_seconds_bucket",
         "cratedb_prometheus_adapter_write_latency_seconds_sum",
