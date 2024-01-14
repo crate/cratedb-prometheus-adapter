@@ -5,7 +5,7 @@ global:
   # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
   external_labels:
-    subsystem: 'database'
+    subsystem: 'database-testdrive'
 
 # Scrape configurations for two endpoints: It scrapes metrics from both
 # Prometheus, and from CrateDB Prometheus Adapter.
