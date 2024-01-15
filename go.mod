@@ -9,15 +9,12 @@ require (
 	github.com/jackc/pgtype v1.14.1
 	github.com/jackc/pgx/v5 v5.5.2
 	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/common v0.45.0
+	github.com/prometheus/common v0.46.0
 	github.com/prometheus/prometheus v0.48.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require (
-	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
-)
+require google.golang.org/protobuf v1.32.0 // indirect
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -38,7 +35,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
