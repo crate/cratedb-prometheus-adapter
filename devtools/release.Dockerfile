@@ -3,7 +3,7 @@
 # Run release archive builder within Docker container.
 #
 
-FROM golang:1.21
+FROM golang:1.20-bullseye
 
 RUN apt-get update && apt-get --yes install zip
 
