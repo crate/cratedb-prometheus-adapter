@@ -13,7 +13,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-const crateWriteStatement = `INSERT INTO metrics ("labels", "labels_hash", "timestamp", "value", "valueRaw") VALUES ($1, $2, $3, $4, $5)`
+const crateWriteStatement = `INSERT INTO "%s" ("labels", "labels_hash", "timestamp", "value", "valueRaw") VALUES ($1, $2, $3, $4, $5)`
 
 type crateRow struct {
 	labels     model.Metric
@@ -37,6 +37,7 @@ type crateReadResponse struct {
 
 type crateEndpoint struct {
 	poolConf      *pgxpool.Config
+	tableName     string
 	readPoolSize  int
 	writePoolSize int
 	readTimeout   time.Duration
@@ -96,7 +97,8 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 			}
 		}
 
-		_, err := conn.Prepare(ctx, "write_statement", crateWriteStatement)
+		writeStatement := fmt.Sprintf(crateWriteStatement, ep.Table)
+		_, err := conn.Prepare(ctx, "write_statement", writeStatement)
 		if err != nil {
 			return fmt.Errorf("error preparing write statement: %v", err)
 		}
@@ -104,6 +106,7 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 	}
 	return &crateEndpoint{
 		poolConf:      poolConf,
+		tableName:     ep.Table,
 		readPoolSize:  ep.ReadPoolSize,
 		writePoolSize: ep.WritePoolSize,
 		readTimeout:   time.Duration(ep.ReadTimeout) * time.Second,
