@@ -1,11 +1,7 @@
 # Backlog
 
 ## Iteration +1
-- Make schema **and** table name configurable
-- Regular expressions not working
-  - https://github.com/crate/cratedb-prometheus-adapter/issues/24
-  - https://prometheus.io/docs/prometheus/latest/querying/basics/
-  - https://prometheus.io/docs/prometheus/latest/querying/examples/
+- Make `tablename` setting configurable. Right now, it is hard-coded to `schema`
 - Expose metrics about both database connection pools
   https://github.com/crate/cratedb-prometheus-adapter/pull/105
 
@@ -29,3 +25,11 @@
 - Refactor metric names
   > Generated/dynamic metric names are a sign that you should be using labels instead.
   > -- https://prometheus.io/docs/instrumenting/writing_clientlibs/#metric-names
+
+
+## Done
+- Regular expressions not working?
+  - https://github.com/crate/cratedb-prometheus-adapter/issues/24
+  - https://prometheus.io/docs/prometheus/latest/querying/basics/
+  - https://prometheus.io/docs/prometheus/latest/querying/examples/
+- Make `schema` setting configurable
