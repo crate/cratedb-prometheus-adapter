@@ -26,7 +26,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-const version = "0.5.0"
+const version = "0.5.1"
 
 var (
 	listenAddress       = flag.String("web.listen-address", ":9268", "Address to listen on for Prometheus requests.")

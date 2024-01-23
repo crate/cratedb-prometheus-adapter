@@ -5,6 +5,10 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+
+2024-01-23 0.5.1
+================
+
 - Packaging: Re-add compatibility with glibc 2.31,
   by building on ``golang:1.20-bullseye``.
 - Fixed use of ``schema`` configuration setting, it was not honored.
