@@ -1,6 +1,6 @@
 crash
 cratedb-toolkit==0.0.3
-pueblo[proc]==0.0.6
+pueblo[proc]==0.0.7
 prometheus-api-client<0.6
 pytest<8
 pytest-env<2
