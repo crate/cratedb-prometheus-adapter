@@ -211,6 +211,7 @@ type crateDbPrometheusAdapter struct {
 }
 
 func (ca *crateDbPrometheusAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSeries, error) {
+	//fmt.Printf("QUERY: %s", config{}.Endpoints[0].Table)
 	query, err := queryToSQL(q)
 	if err != nil {
 		return nil, err
@@ -357,6 +358,7 @@ type endpointConfig struct {
 	Port             uint16 `yaml:"port"`
 	User             string `yaml:"user"`
 	Password         string `yaml:"password"`
+	Table            string `yaml:"table"`
 	Schema           string `yaml:"schema"`
 	MaxConnections   int    `yaml:"max_connections"`
 	ReadPoolSize     int    `yaml:"read_pool_size_max"`
@@ -383,8 +385,11 @@ func (ep *endpointConfig) toDSN() string {
 	if ep.Password != "" {
 		params = append(params, fmt.Sprintf("password=%s", ep.Password))
 	}
+	if ep.Table != "" {
+		params = append(params, fmt.Sprintf("table=%s", ep.Table))
+	}
 	if ep.Schema != "" {
-		params = append(params, fmt.Sprintf("database=%s", ep.Schema))
+		params = append(params, fmt.Sprintf("schema=%s", ep.Schema))
 	}
 	if ep.ConnectTimeout != 0 {
 		params = append(params, fmt.Sprintf("connect_timeout=%v", ep.ConnectTimeout))
