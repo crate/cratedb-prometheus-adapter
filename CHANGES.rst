@@ -5,6 +5,11 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+- Changed the behavior to ignore samples with identical timestamps but different
+  values during ingestion. This change aligns with Prometheus' behavior, as
+  duplicates should not occur. However, since this enforcement is recent,
+  there may be setups with existing duplicates; thus, we now ignore them to
+  prevent errors.
 
 2024-01-23 0.5.1
 ================
