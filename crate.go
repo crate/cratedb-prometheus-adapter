@@ -13,7 +13,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-const crateWriteStatement = `INSERT INTO metrics ("labels", "labels_hash", "timestamp", "value", "valueRaw") VALUES ($1, $2, $3, $4, $5)`
+const crateWriteStatement = `INSERT INTO metrics ("labels", "labels_hash", "timestamp", "value", "valueRaw") VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`
 
 type crateRow struct {
 	labels     model.Metric
@@ -112,10 +112,9 @@ func newCrateEndpoint(ep *endpointConfig) *crateEndpoint {
 }
 
 func (c *crateEndpoint) endpoint() endpoint.Endpoint {
-	/**
-	 * Initialize connection pools lazily here instead of in `newCrateEndpoint()`,
-	 * so that the adapter does not crash on startup if the endpoint is unavailable.
-	**/
+
+	// Initialize connection pools lazily here instead of in `newCrateEndpoint()`,
+	// so that the adapter does not crash on startup if the endpoint is unavailable.
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 
 		// Initialize database connection pools.
@@ -134,9 +133,8 @@ func (c *crateEndpoint) endpoint() endpoint.Endpoint {
 }
 
 func (c *crateEndpoint) createPools(ctx context.Context) (err error) {
-	/**
-	 * Initialize two connection pools, one for read/write each.
-	**/
+
+	// Initialize two connection pools, one for read/write each.
 	c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
 	if c.readPool == nil {
 		c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
