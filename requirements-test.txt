@@ -1,5 +1,5 @@
 crash
-cratedb-toolkit==0.0.15
+cratedb-toolkit==0.0.26
 pueblo[proc]==0.0.9
 prometheus-api-client<0.6
 pytest<9
