@@ -10,6 +10,8 @@ Unreleased
   duplicates should not occur. However, since this enforcement is recent,
   there may be setups with existing duplicates; thus, we now ignore them to
   prevent errors.
+- Update Go images to 1.23.
+- Update all deps to latest (prometheus v0.54.1).
 
 2024-01-23 0.5.1
 ================
