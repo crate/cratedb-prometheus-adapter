@@ -10,7 +10,7 @@ require (
 	github.com/golang/snappy v0.0.4
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.1
-	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.1
 	github.com/prometheus/prometheus v0.54.1
 	gopkg.in/yaml.v2 v2.4.0
