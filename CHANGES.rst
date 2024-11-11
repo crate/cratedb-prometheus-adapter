@@ -5,13 +5,15 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+2024-11-11 0.5.2
+================
 - Changed the behavior to ignore samples with identical timestamps but different
   values during ingestion. This change aligns with Prometheus' behavior, as
   duplicates should not occur. However, since this enforcement is recent,
   there may be setups with existing duplicates; thus, we now ignore them to
   prevent errors.
 - Update Go images to 1.23.
-- Update all deps to latest (prometheus v0.54.1).
+- Update all deps to latest (prometheus v0.55.1).
 
 2024-01-23 0.5.1
 ================
