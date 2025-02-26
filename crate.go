@@ -135,7 +135,6 @@ func (c *crateEndpoint) endpoint() endpoint.Endpoint {
 func (c *crateEndpoint) createPools(ctx context.Context) (err error) {
 
 	// Initialize two connection pools, one for read/write each.
-	c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
 	if c.readPool == nil {
 		c.readPool, err = createPoolWithPoolSize(ctx, c.poolConf.Copy(), c.readPoolSize)
 		if err != nil {
