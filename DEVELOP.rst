@@ -172,7 +172,8 @@ On branch "main":
 
 Next:
 
-- Trigger the build/release script on `Jenkins CI`_ for the newly created tag
+- Trigger the build/release job ``prometheus_adapter_release`` on
+  `Jenkins CI`_ for the tag you just created.
 
 Maintaining the jobs
 ====================
