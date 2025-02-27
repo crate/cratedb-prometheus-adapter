@@ -5,6 +5,14 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+2025-02-27 0.5.3
+================
+- Removed stray creation of new connection pool on every request,
+  likely resolving the memory leak introduced with v0.5.0.
+  Thanks, @widmogrod.
+- Updated Prometheus libraries to
+  prometheus/prometheus v0.302.1 and prometheus/common v0.62.0.
+
 2024-11-11 0.5.2
 ================
 - Changed the behavior to ignore samples with identical timestamps but different
