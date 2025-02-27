@@ -6,21 +6,21 @@ toolchain go1.23.2
 
 require (
 	github.com/go-kit/kit v0.13.0
-	github.com/go-kit/log v0.2.1
 	github.com/golang/snappy v0.0.4
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/prometheus/client_golang v1.20.5
-	github.com/prometheus/common v0.61.0
+	github.com/prometheus/common v0.62.0
 	github.com/prometheus/prometheus v0.55.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
+	github.com/go-kit/log v0.2.1 // indirect
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 )
 
 require (

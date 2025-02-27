@@ -4,7 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/prometheus/common/promslog"
 	"io/ioutil"
+	slog "log/slog"
 	"math"
 	"net/http"
 	"regexp"
@@ -13,15 +15,12 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/sd"
 	"github.com/go-kit/kit/sd/lb"
-	"github.com/go-kit/log"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/prometheus/prompb"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -78,7 +77,7 @@ var (
 )
 
 // Module-wide `logger` variable, initialized by `setupLogging()`.
-var logger log.Logger
+var logger *slog.Logger
 
 func init() {
 	setupLogging()
@@ -92,18 +91,18 @@ func init() {
 	prometheus.MustRegister(readSamples)
 	prometheus.MustRegister(readCrateDuration)
 	prometheus.MustRegister(readCrateErrors)
-	level.Info(logger).Log("msg", "Initialized CrateDB Prometheus Adapter", "version", version)
+	logger.Info("Initialized CrateDB Prometheus Adapter", "version", version)
 }
 
 // Escaping for strings for Crate.io SQL.
 var escaper = strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "'", "\\'")
 
-// Set up promlog logger.
+// Set up promslog logger.
 func setupLogging() {
-	logLevel := promlog.AllowedLevel{}
+	logLevel := promslog.AllowedLevel{}
 	logLevel.Set("debug")
-	logConfig := &promlog.Config{Level: &logLevel}
-	logger = promlog.New(logConfig)
+	logConfig := &promslog.Config{Level: &logLevel}
+	logger = promslog.New(logConfig)
 }
 
 // Escape a labelname for use in SQL as a column name.
@@ -216,7 +215,7 @@ func (ca *crateDbPrometheusAdapter) runQuery(q *prompb.Query) ([]*prompb.TimeSer
 		return nil, err
 	}
 
-	level.Debug(logger).Log("msg", "runQuery", "stmt", query)
+	logger.Debug("runQuery", "stmt", query)
 	request := &crateReadRequest{stmt: query}
 
 	timer := prometheus.NewTimer(readCrateDuration)
@@ -235,34 +234,34 @@ func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Re
 
 	compressed, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to read body", "err", err)
+		logger.Error("Failed to read body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	reqBuf, err := snappy.Decode(nil, compressed)
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to decompress body", "err", err)
+		logger.Error("Failed to decompress body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var req prompb.ReadRequest
 	if err := req.Unmarshal(reqBuf); err != nil {
-		level.Error(logger).Log("msg", "Failed to unmarshal body", "err", err)
+		logger.Error("Failed to unmarshal body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if len(req.Queries) != 1 {
-		level.Error(logger).Log("msg", "More than one query sent")
+		logger.Error("More than one query sent")
 		http.Error(w, "Can only handle one query.", http.StatusBadRequest)
 		return
 	}
 
 	result, err := ca.runQuery(req.Queries[0])
 	if err != nil {
-		level.Warn(logger).Log("msg", "Failed to run select against CrateDB", "err", err)
+		logger.Warn("Failed to run select against CrateDB", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -273,14 +272,14 @@ func (ca *crateDbPrometheusAdapter) handleRead(w http.ResponseWriter, r *http.Re
 	}
 	data, err := resp.Marshal()
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to marshal response", "err", err)
+		logger.Error("Failed to marshal response", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	if _, err := w.Write(snappy.Encode(nil, data)); err != nil {
-		level.Error(logger).Log("msg", "Failed to compress response", "err", err)
+		logger.Error("Failed to compress response", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -320,21 +319,21 @@ func (ca *crateDbPrometheusAdapter) handleWrite(w http.ResponseWriter, r *http.R
 
 	compressed, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to read body", "err", err)
+		logger.Error("Failed to read body", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	reqBuf, err := snappy.Decode(nil, compressed)
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to decompress body", "err", err)
+		logger.Error("Failed to decompress body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	var req prompb.WriteRequest
 	if err := req.Unmarshal(reqBuf); err != nil {
-		level.Error(logger).Log("msg", "Failed to unmarshal body", "err", err)
+		logger.Error("Failed to unmarshal body", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -346,7 +345,7 @@ func (ca *crateDbPrometheusAdapter) handleWrite(w http.ResponseWriter, r *http.R
 	writeTimer.ObserveDuration()
 	if err != nil {
 		writeCrateErrors.Inc()
-		level.Error(logger).Log("msg", "Failed to write data to CrateDB", "err", err)
+		logger.Error("Failed to write data to CrateDB", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -410,7 +409,7 @@ func (c *config) toString() string {
 func (c *config) toYaml() string {
 	data, err := yaml.Marshal(c)
 	if err != nil {
-		level.Error(logger).Log("msg", "Serialization to YAML failed", "err", err)
+		logger.Error("Serialization to YAML failed", "err", err)
 	}
 	return string(data)
 }
@@ -418,7 +417,7 @@ func (c *config) toYaml() string {
 func loadConfig(filename string) (*config, error) {
 	conf := &config{}
 	if filename != "" {
-		level.Info(logger).Log("msg", "Reading configuration from file", "filename", filename)
+		logger.Error("Reading configuration from file", "filename", filename)
 		content, err := ioutil.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("reading configuration file %q failed: %v", filename, err)
@@ -428,7 +427,7 @@ func loadConfig(filename string) (*config, error) {
 			}
 		}
 	} else {
-		level.Warn(logger).Log("msg", "No configuration file used, falling back to built-in configuration")
+		logger.Error("No configuration file used, falling back to built-in configuration")
 		item := endpointConfig{}
 		conf.Endpoints = []endpointConfig{item}
 	}
@@ -466,7 +465,7 @@ func builtinConfig() *config {
 
 func main() {
 
-	level.Info(logger).Log("msg", "Starting CrateDB Prometheus Adapter", "version", version)
+	logger.Info("Starting CrateDB Prometheus Adapter", "version", version)
 
 	flag.Parse()
 
@@ -482,7 +481,7 @@ func main() {
 
 	conf, err := loadConfig(*configFile)
 	if err != nil {
-		level.Error(logger).Log("msg", "Error loading configuration", "config", *configFile, "err", err)
+		logger.Error("Error loading configuration", "config", *configFile, "err", err)
 	}
 
 	subscriber := sd.FixedEndpointer{}
@@ -508,8 +507,8 @@ func main() {
 	http.HandleFunc("/write", ca.handleWrite)
 	http.HandleFunc("/read", ca.handleRead)
 	http.Handle("/metrics", promhttp.Handler())
-	level.Info(logger).Log("msg", "Listening ...", "address", *listenAddress)
-	level.Info(logger).Log("msg", "Connecting ...", "endpoints", conf.toString())
+	logger.Info("Listening ...", "address", *listenAddress)
+	logger.Info("Connecting ...", "endpoints", conf.toString())
 	listen_error := http.ListenAndServe(*listenAddress, nil)
-	level.Info(logger).Log("msg", "Final outcome", "err", listen_error)
+	logger.Info("Final outcome", "err", listen_error)
 }
