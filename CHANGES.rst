@@ -5,6 +5,13 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+2025-03-05 0.5.4
+================
+- Updated `prometheus/client_golang` from 1.21.0 to 1.21.1,
+  addressing a performance regression introduced in `PROMETHEUS-CLIENT-1661`_.
+
+.. _PROMETHEUS-CLIENT-1661: https://github.com/prometheus/client_golang/pull/1661
+
 2025-02-27 0.5.3
 ================
 - Removed stray creation of new connection pool on every request,
