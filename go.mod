@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/go-kit/kit v0.13.0
-	github.com/golang/snappy v0.0.4
+	github.com/golang/snappy v1.0.0
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/prometheus/client_golang v1.21.1
