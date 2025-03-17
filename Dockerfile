@@ -1,4 +1,4 @@
-FROM golang:1.23-bullseye AS builder
+FROM golang:1.24-bullseye AS builder
 WORKDIR /go/src/github.com/crate/cratedb-prometheus-adapter
 COPY . /go/src/github.com/crate/cratedb-prometheus-adapter/
 RUN CGO_ENABLED=0 GOOS=linux go build
