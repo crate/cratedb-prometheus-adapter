@@ -4,6 +4,7 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+- Updated `prometheus/common` from 0.62.0 to 0.63.0
 
 2025-03-05 0.5.4
 ================
