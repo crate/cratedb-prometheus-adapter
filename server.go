@@ -99,9 +99,9 @@ var escaper = strings.NewReplacer("\\", "\\\\", "\"", "\\\"", "'", "\\'")
 
 // Set up promslog logger.
 func setupLogging() {
-	logLevel := promslog.AllowedLevel{}
+	logLevel := promslog.NewLevel()
 	// logLevel.Set("debug")
-	logConfig := &promslog.Config{Level: &logLevel}
+	logConfig := &promslog.Config{Level: logLevel}
 	logger = promslog.New(logConfig)
 }
 
