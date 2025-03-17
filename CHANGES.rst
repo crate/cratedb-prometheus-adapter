@@ -5,6 +5,7 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 - Updated `prometheus/common` from 0.62.0 to 0.63.0
+- OCI: Updated images to use Golang 1.24
 
 2025-03-05 0.5.4
 ================
