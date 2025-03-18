@@ -4,6 +4,9 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+
+2025-03-18 0.5.5
+================
 - Logging: Turned off debug logging
 - Dependencies: Updated `golang/snappy` from 0.0.4 to 1.0.0
 - Dependencies: Updated `prometheus/common` from 0.62.0 to 0.63.0
