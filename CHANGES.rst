@@ -5,6 +5,14 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+2025-04-14 0.5.6
+================
+- Dependencies: Updated ``jackc/pgx`` from 5.7.2 to `5.7.4 <pgx-5.7.4_>`_
+- Dependencies: Updated ``prometheus/client_golang`` from 1.21.1 to `1.22.0 <prometheus-1.22.0_>`_
+
+.. _pgx-5.7.4: https://github.com/jackc/pgx/blob/master/CHANGELOG.md#574-march-24-2025
+.. _prometheus-1.22.0: https://github.com/prometheus/client_golang/blob/main/CHANGELOG.md#1220--2025-04-07
+
 2025-03-18 0.5.5
 ================
 - Logging: Turned off debug logging
