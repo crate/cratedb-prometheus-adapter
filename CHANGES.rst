@@ -8,13 +8,13 @@ Unreleased
 2025-03-18 0.5.5
 ================
 - Logging: Turned off debug logging
-- Dependencies: Updated `golang/snappy` from 0.0.4 to 1.0.0
-- Dependencies: Updated `prometheus/common` from 0.62.0 to 0.63.0
+- Dependencies: Updated ``golang/snappy`` from 0.0.4 to 1.0.0
+- Dependencies: Updated ``prometheus/common`` from 0.62.0 to 0.63.0
 - OCI: Updated images to use Golang 1.24
 
 2025-03-05 0.5.4
 ================
-- Updated `prometheus/client_golang` from 1.21.0 to 1.21.1,
+- Updated ``prometheus/client_golang`` from 1.21.0 to 1.21.1,
   addressing a performance regression introduced in `PROMETHEUS-CLIENT-1661`_.
 
 .. _PROMETHEUS-CLIENT-1661: https://github.com/prometheus/client_golang/pull/1661
@@ -25,7 +25,7 @@ Unreleased
   likely resolving the memory leak introduced with v0.5.0.
   Thanks, @widmogrod.
 - Updated Prometheus libraries to
-  prometheus/prometheus v0.302.1 and prometheus/common v0.62.0.
+  ``prometheus/prometheus`` v0.302.1 and ``prometheus/common`` v0.62.0.
 
 2024-11-11 0.5.2
 ================
