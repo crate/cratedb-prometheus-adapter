@@ -1,7 +1,6 @@
 module github.com/crate/cratedb-prometheus-adapter
 
 go 1.22.7
-
 toolchain go1.24.1
 
 require (
@@ -11,7 +10,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.63.0
-	github.com/prometheus/prometheus v0.302.1
+	github.com/prometheus/prometheus v0.303.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -37,9 +36,9 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
