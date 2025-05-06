@@ -4,7 +4,7 @@ import subprocess
 import time
 
 import pytest
-from cratedb_toolkit.util import DatabaseAdapter
+from cratedb_toolkit.util.database import DatabaseAdapter
 from prometheus_api_client import PrometheusConnect
 from pueblo.util.proc import process
 
