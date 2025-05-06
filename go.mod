@@ -1,7 +1,8 @@
 module github.com/crate/cratedb-prometheus-adapter
 
-go 1.22.7
-toolchain go1.24.1
+go 1.23.0
+
+toolchain go1.24.2
 
 require (
 	github.com/go-kit/kit v0.13.0
