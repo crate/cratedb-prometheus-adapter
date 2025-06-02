@@ -11,7 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.64.0
-	github.com/prometheus/prometheus v0.304.0
+	github.com/prometheus/prometheus v0.304.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
