@@ -61,7 +61,7 @@ def flush_database(cratedb_client):
 
 
 @pytest.fixture(scope="session")
-def cratedb_client():
+def cratedb_client() -> DatabaseAdapter:
     """
     Provide a database client to the test cases.
     """
@@ -69,7 +69,7 @@ def cratedb_client():
 
 
 @pytest.fixture(scope="session")
-def prometheus_client():
+def prometheus_client() -> PrometheusConnect:
     """
     Provide a Prometheus client to the test cases.
     """
