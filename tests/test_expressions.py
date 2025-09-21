@@ -174,9 +174,9 @@ def test_range_vector_selector_success(prometheus_client):
     https://prometheus.io/docs/prometheus/latest/querying/basics/#range-vector-selectors
     """
     result = prometheus_client.custom_query(query="""
-    prometheus_http_requests_total{}[1s]
+    cratedb_prometheus_adapter_write_timeseries_samples_count{}[10s]
     """)
-    assert len(result) > 15
+    assert len(result) == 1
 
 
 def test_range_vector_selector_empty(prometheus_client):
@@ -186,6 +186,6 @@ def test_range_vector_selector_empty(prometheus_client):
     https://prometheus.io/docs/prometheus/latest/querying/basics/#range-vector-selectors
     """
     result = prometheus_client.custom_query(query="""
-    prometheus_http_requests_total{}[1ms]
+    cratedb_prometheus_adapter_write_timeseries_samples_count{}[1ms]
     """)
     assert len(result) == 0

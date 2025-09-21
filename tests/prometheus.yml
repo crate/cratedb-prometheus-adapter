@@ -18,10 +18,10 @@ global:
 # to permit fast metrics convergence.
 scrape_configs:
 
-  - job_name: 'prometheus'
-    scrape_interval: 250ms
-    static_configs:
-      - targets: ['localhost:9090']
+  #- job_name: 'prometheus'
+  #  scrape_interval: 250ms
+  #  static_configs:
+  #    - targets: ['localhost:9090']
 
   - job_name: 'cratedb'
     scrape_interval: 250ms
@@ -42,7 +42,7 @@ remote_write:
   #- url: http://localhost:9268/write
 
     # Timeout for requests to the remote write endpoint.
-    remote_timeout: 2s
+    remote_timeout: 1s
 
     # Configure the sending of series metadata to remote storage.
     metadata_config:

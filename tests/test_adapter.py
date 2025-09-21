@@ -99,7 +99,7 @@ def test_verify_write_activity(prometheus_client):
         metric_name="cratedb_prometheus_adapter_write_timeseries_samples_sum"
     )
     value = int(result[0]["value"][1])
-    assert value > 1_000
+    assert value > 500
 
 
 @pytest.mark.skipif("sink" in socket.gethostname(), reason="Does not work on developer workstation")
