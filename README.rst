@@ -9,10 +9,10 @@ CrateDB Prometheus Adapter
 The `remote write`_ and `remote read`_ features of Prometheus allow transparently
 sending and receiving samples. This is primarily intended for long term storage.
 
-The CrateDB Prometheus Adapter accepts Prometheus remote read/write requests,
-and sends them to CrateDB. This allows using CrateDB as a long term storage
-for metrics data from Prometheus, OpenTelemetry, and many other system- and
-application-telemetry solutions.
+The CrateDB Prometheus Adapter accepts Prometheus remote read/write requests
+and sends them to CrateDB. This lets you use CrateDB as long term storage for
+Prometheus, OpenTelemetry, and many other system- and application-telemetry
+solutions.
 
 Features
 ========
@@ -22,7 +22,7 @@ Features
 - Support for storing `OpenTelemetry`_ metrics data through
   `OpenTelemetry Collector`_'s `Prometheus Remote Write Exporter`_.
 
-- The program also exports metrics about itself, using the
+- The program also exports its own metrics using the
   ``cratedb_prometheus_adapter_`` prefix.
 
 Setup
