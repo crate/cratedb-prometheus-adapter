@@ -16,6 +16,16 @@ updates:
     schedule:
       interval: "daily"
 
+  - package-ecosystem: "docker-compose"
+    directory: "/sandbox"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/tests"
+    schedule:
+      interval: "daily"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
