@@ -23,6 +23,19 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  otelcol:
+    image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.135.0
+    ports:
+      - "4317:4317/tcp"     # OTLP gRPC
+      - "4318:4318/tcp"     # OTLP HTTP
+    volumes:
+      - ./otelcol-config.yaml:/etc/otelcol-contrib/config.yaml
+
+    # Make `host.docker.internal` work on Linux.
+    # https://stackoverflow.com/a/67158212
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   cratedb-version:
     image: crate/crate:nightly
     command: -version
