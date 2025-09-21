@@ -1,14 +1,17 @@
 """
 Verify OpenTelemetry probe.
 """
-import os
+import subprocess
 import sys
 
 
 def test_opentelemetry(cratedb_client, flush_database):
 
     # Invoke application probe that sends metrics to the OpenTelemetry Collector.
-    os.system(f"opentelemetry-instrument --logs_exporter=otlp --service_name=app {sys.executable} tests/otel_probe.py")
+    subprocess.check_call(
+        f"opentelemetry-instrument --logs_exporter=otlp --service_name=app "
+        f"{sys.executable} tests/otel_probe.py",
+        shell=True)
     flush_database()
 
     # Query database.
