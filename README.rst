@@ -9,13 +9,21 @@ CrateDB Prometheus Adapter
 The `remote write`_ and `remote read`_ features of Prometheus allow transparently
 sending and receiving samples. This is primarily intended for long term storage.
 
-This is an adapter that accepts Prometheus remote read/write requests,
-and sends them to CrateDB. This allows using CrateDB as long term storage
-for Prometheus.
+The CrateDB Prometheus Adapter accepts Prometheus remote read/write requests,
+and sends them to CrateDB. This allows using CrateDB as a long term storage
+for metrics data from Prometheus, OpenTelemetry, and many other system- and
+application-telemetry solutions.
 
-Along the lines, the program also exports metrics about itself, using the
-``cratedb_prometheus_adapter_`` prefix.
+Features
+========
 
+- Support for the Prometheus remote read and remote write interfaces.
+
+- Support for storing `OpenTelemetry`_ metrics data through
+  `OpenTelemetry Collector`_'s `Prometheus Remote Write Exporter`_.
+
+- The program also exports metrics about itself, using the
+  ``cratedb_prometheus_adapter_`` prefix.
 
 Setup
 =====
@@ -205,6 +213,9 @@ start the service, and enable it to be started automatically on system boot::
 .. _cratedb-prometheus-adapter.default: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.default
 .. _cratedb-prometheus-adapter.service: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.service
 .. _ddl.sql: https://github.com/crate/cratedb-prometheus-adapter/blob/main/sql/ddl.sql
+.. _OpenTelemetry: https://opentelemetry.io/
+.. _OpenTelemetry Collector: https://opentelemetry.io/docs/collector/
+.. _Prometheus Remote Write Exporter: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusremotewriteexporter
 .. _Query Timeouts - Using Context Cancellation: https://www.sohamkamani.com/golang/sql-database/#query-timeouts---using-context-cancellation
 .. _remote read: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_read
 .. _remote write: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
