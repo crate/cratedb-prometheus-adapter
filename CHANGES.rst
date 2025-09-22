@@ -6,6 +6,7 @@ Unreleased
 ==========
 
 - Runtime: Updated to Go 1.25, OCI now uses Debian 13 "trixie"
+- OpenTelemetry: Verified storing metrics data from OTel Collector
 
 2025-05-22 0.5.8
 ================
