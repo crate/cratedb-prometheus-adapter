@@ -6,6 +6,7 @@ Unreleased
 ==========
 
 - Runtime: Updated to Go 1.25, OCI now uses Debian 13 "trixie"
+- Runtime: Deprecated support for Go 1.21 and 1.22
 
 2025-05-22 0.5.8
 ================
