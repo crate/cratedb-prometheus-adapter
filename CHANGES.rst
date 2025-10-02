@@ -5,6 +5,9 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+2025-10-02 0.5.9
+================
+
 - Runtime: Updated to Go 1.25, OCI now uses Debian 13 "trixie"
 - Runtime: Deprecated support for Go 1.21 and 1.22
 - OpenTelemetry: Verified storing metrics data from OTel Collector
