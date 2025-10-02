@@ -7,6 +7,11 @@ Unreleased
 
 - Runtime: Updated to Go 1.25, OCI now uses Debian 13 "trixie"
 - Runtime: Deprecated support for Go 1.21 and 1.22
+- OpenTelemetry: Verified storing metrics data from OTel Collector
+- Dependencies: Updated ``jackc/pgx`` from 5.7.5 to 5.7.6
+- Dependencies: Updated ``prometheus/client_golang`` from 1.22.0 to 1.23.2
+- Dependencies: Updated ``prometheus/common`` from 0.64.0 to 0.66.1
+- Dependencies: Updated ``prometheus/prometheus`` from 0.304.0 to 0.304.2
 
 2025-05-22 0.5.8
 ================
