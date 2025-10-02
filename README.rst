@@ -20,7 +20,8 @@ Features
 - Support for the Prometheus remote read and remote write interfaces.
 
 - Support for storing `OpenTelemetry`_ metrics data through
-  `OpenTelemetry Collector`_'s `Prometheus Remote Write Exporter`_.
+  `OpenTelemetry Collector`_'s `Prometheus Remote Write Exporter`_,
+  see documentation about `OpenTelemetry and CrateDB`_.
 
 - The program also exports its own metrics using the
   ``cratedb_prometheus_adapter_`` prefix.
@@ -214,6 +215,7 @@ start the service, and enable it to be started automatically on system boot::
 .. _cratedb-prometheus-adapter.service: https://github.com/crate/cratedb-prometheus-adapter/blob/main/systemd/cratedb-prometheus-adapter.service
 .. _ddl.sql: https://github.com/crate/cratedb-prometheus-adapter/blob/main/sql/ddl.sql
 .. _OpenTelemetry: https://opentelemetry.io/
+.. _OpenTelemetry and CrateDB: https://cratedb.com/docs/guide/integrate/opentelemetry/
 .. _OpenTelemetry Collector: https://opentelemetry.io/docs/collector/
 .. _Prometheus Remote Write Exporter: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/prometheusremotewriteexporter
 .. _Query Timeouts - Using Context Cancellation: https://www.sohamkamani.com/golang/sql-database/#query-timeouts---using-context-cancellation
