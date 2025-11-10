@@ -4,6 +4,6 @@ opentelemetry-distro>=0.50b0,<0.59
 opentelemetry-exporter-otlp<2
 pueblo[proc]==0.0.12
 prometheus-api-client<0.7
-pytest<9
+pytest<10
 pytest-env<2
 requests<3
