@@ -4,6 +4,7 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+- Release: Fixed release tooling that prevented production of version 0.5.10
 
 2025-11-12 0.5.10
 =================
