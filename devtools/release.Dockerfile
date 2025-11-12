@@ -3,7 +3,7 @@
 # Run release archive builder within Docker container.
 #
 
-FROM golang:1.24-bullseye
+FROM golang:1.25-trixie
 
 RUN apt-get update && apt-get --yes install zip
 
