@@ -5,16 +5,21 @@ CHANGES for CrateDB Prometheus Adapter
 Unreleased
 ==========
 
+2025-11-12 0.5.10
+=================
+- Dependencies: Updated ``prometheus/common`` from 0.66.1 to 0.67.2
+- Dependencies: Updated ``prometheus/prometheus`` from 0.306.0 to 0.307.3
+- Integrations: Updated ``opentelemetry-collector-contrib`` from 0.137.0 to 0.139.0
+
 2025-10-02 0.5.9
 ================
-
 - Runtime: Updated to Go 1.25, OCI now uses Debian 13 "trixie"
 - Runtime: Deprecated support for Go 1.21 and 1.22
 - OpenTelemetry: Verified storing metrics data from OTel Collector
 - Dependencies: Updated ``jackc/pgx`` from 5.7.5 to 5.7.6
 - Dependencies: Updated ``prometheus/client_golang`` from 1.22.0 to 1.23.2
 - Dependencies: Updated ``prometheus/common`` from 0.64.0 to 0.66.1
-- Dependencies: Updated ``prometheus/prometheus`` from 0.304.0 to 0.304.2
+- Dependencies: Updated ``prometheus/prometheus`` from 0.304.0 to 0.306.0
 
 2025-05-22 0.5.8
 ================
