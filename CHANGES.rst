@@ -4,6 +4,9 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+
+2025-11-13 0.5.11
+=================
 - Runtime: Updated OCI to use Go 1.25 on Debian 13 "trixie"
 - Release: Fixed release tooling that prevented production of version 0.5.10
 
