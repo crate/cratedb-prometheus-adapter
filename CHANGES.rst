@@ -4,6 +4,9 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+- Dependencies: Updated ``jackc/pgx`` from 5.7.6 to 5.8.0
+- Dependencies: Updated ``prometheus/common`` from 0.67.2 to 0.67.5
+- Dependencies: Updated ``golang.org/x/crypto`` from 0.42.0 to 0.45.0
 
 2025-11-13 0.5.11
 =================
