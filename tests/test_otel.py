@@ -23,6 +23,7 @@ def test_opentelemetry(cratedb_client, flush_database):
     assert result[0]["labels"] == {
         '__name__': 'temperature',
         'job': 'app',
+        'otel_scope_name': 'testdrive.meter.name',
         'subsystem': 'otel-testdrive',
     }
     assert result[0]["value"] == 42.42
