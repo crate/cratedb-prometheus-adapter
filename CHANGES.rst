@@ -4,6 +4,7 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+- Runtime: Updated OCI to use Go 1.26
 
 2026-01-07 0.5.12
 =================
