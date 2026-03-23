@@ -6,7 +6,7 @@ require (
 	github.com/go-kit/kit v0.13.0
 	github.com/golang/snappy v1.0.0
 	github.com/jackc/pgtype v1.14.4
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.5
 	github.com/prometheus/prometheus v0.310.0
