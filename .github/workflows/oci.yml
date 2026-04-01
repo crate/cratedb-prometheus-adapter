@@ -50,7 +50,7 @@ jobs:
           echo "Labels:    ${{ steps.meta.outputs.labels }}"
       -
         name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         if: matrix.platforms != 'linux/amd64'
       -
         name: Set up Docker Buildx
