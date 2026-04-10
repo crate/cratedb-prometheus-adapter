@@ -1,6 +1,6 @@
 crash
 cratedb-toolkit==0.0.46
-opentelemetry-distro>=0.50b0,<0.61
+opentelemetry-distro>=0.50b0,<0.63
 opentelemetry-exporter-otlp<2
 pandas>=2,<4
 pueblo[proc]==0.0.18
