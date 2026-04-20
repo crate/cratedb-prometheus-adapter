@@ -4,6 +4,9 @@ CHANGES for CrateDB Prometheus Adapter
 
 Unreleased
 ==========
+- Dependencies: Updated ``jackc/pgx`` to 5.9.2
+- Dependencies: Updated ``prometheus/prometheus`` to 0.311.2
+- Integrations: Updated ``opentelemetry-collector-contrib`` to 0.150.1
 
 2026-03-04 0.5.13
 =================
