@@ -1,5 +1,5 @@
 crash
-cratedb-toolkit==0.0.46
+cratedb-toolkit==0.0.47
 opentelemetry-distro>=0.50b0,<0.63
 opentelemetry-exporter-otlp<2
 pandas>=3.0.2,<4
