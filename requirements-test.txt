@@ -2,7 +2,7 @@ crash
 cratedb-toolkit==0.1.1
 opentelemetry-distro>=0.50b0,<0.63
 opentelemetry-exporter-otlp<2
-pandas>=3.0.6,<4
+pandas>=3.1.0,<4
 pueblo[proc]==0.1.0
 prometheus-api-client<0.8
 pytest<10
